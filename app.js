@@ -14,7 +14,9 @@
     statusFilter: "all",      // "all" | "completed" | "in-progress" | "pending" | "has-missed"
     categoryFilter: "all",    // "all" | category name
     searchQuery: "",
-    theme: "dark"
+    theme: "dark",
+    detailTab: "checklist",   // "checklist" | "study"
+    pendingNoteScroll: null   // subtopic id to scroll to after the study tab renders
   };
 
   // ── DOM refs ──
@@ -43,6 +45,179 @@
         state.theme = saved.theme || "dark";
       }
     } catch (e) { /* corrupted */ }
+  }
+
+  // ── Study Notes (Markdown files in notes/day-NN.md) ──
+  const MERMAID_SRC = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
+  const SUBTOPIC_MARKER = /^<!--\s*subtopic:\s*([\w-]+)\s*-->\s*$/gm;
+  const notesCache = {};      // dayNum → { status: "loading" | "ready" | "missing" | "error", html, ids }
+  const diagramCache = {};    // theme + source → rendered SVG markup
+  let mermaidPromise = null;
+  let mermaidTheme = null;
+  let diagramSeq = 0;
+
+  function notesPath(dayNum) {
+    return `notes/day-${String(dayNum).padStart(2, "0")}.md`;
+  }
+
+  function loadDayNotes(dayNum) {
+    if (notesCache[dayNum]) return;
+    notesCache[dayNum] = { status: "loading" };
+    fetch(notesPath(dayNum))
+      .then(res => {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(md => {
+        notesCache[dayNum] = md === null ? { status: "missing" } : { status: "ready", ...parseNotes(md) };
+      })
+      .catch(() => { notesCache[dayNum] = { status: "error" }; })
+      .finally(() => {
+        if (state.currentView === "detail" && state.selectedDay === dayNum) renderDayDetail(dayNum);
+      });
+  }
+
+  function parseNotes(md) {
+    const ids = new Set();
+    // Turn each subtopic marker into an anchor (blank line after it so the heading still parses as Markdown)
+    const withAnchors = md.replace(SUBTOPIC_MARKER, (_, id) => {
+      ids.add(id);
+      return `<div class="notes-anchor" id="note-${id}" data-subtopic="${id}"></div>\n`;
+    });
+    const html = typeof marked !== "undefined"
+      ? marked.parse(withAnchors)
+      : `<pre>${escapeHTML(md)}</pre>`;
+    return { html, ids };
+  }
+
+  function ensureMermaid() {
+    if (window.mermaid) return Promise.resolve(window.mermaid);
+    if (!mermaidPromise) {
+      mermaidPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = MERMAID_SRC;
+        script.onload = () => resolve(window.mermaid);
+        script.onerror = () => { mermaidPromise = null; reject(new Error("Mermaid failed to load")); };
+        document.head.appendChild(script);
+      });
+    }
+    return mermaidPromise;
+  }
+
+  // Resolves once every diagram has been drawn (or has failed), so callers can fix scroll positions
+  function renderDiagrams(root) {
+    return Promise.all([...root.querySelectorAll(".mermaid-diagram")].map(el => {
+      const source = el.textContent;
+      const key = `${state.theme}\n${source}`;
+      if (diagramCache[key]) {
+        el.innerHTML = diagramCache[key];
+        el.classList.add("rendered");
+        return null;
+      }
+      const id = `mmd-${++diagramSeq}`;
+      return ensureMermaid()
+        .then(mermaid => {
+          if (mermaidTheme !== state.theme) {
+            mermaid.initialize({
+              startOnLoad: false,
+              securityLevel: "strict",
+              theme: state.theme === "dark" ? "dark" : "default",
+              fontFamily: "Inter, sans-serif"
+            });
+            mermaidTheme = state.theme;
+          }
+          return mermaid.render(id, source);
+        })
+        .then(({ svg }) => {
+          diagramCache[key] = svg;
+          if (!el.isConnected) return;
+          el.innerHTML = svg;
+          el.classList.add("rendered");
+        })
+        .catch(() => {
+          document.getElementById(`d${id}`)?.remove();   // Mermaid leaves its error container behind
+          el.classList.add("failed");
+        });
+    }));
+  }
+
+  // Post-process rendered Markdown: diagrams, code highlighting, heading ids, per-subtopic "done" toggles
+  function enhanceStudyNotes(article, toc, dayNum) {
+    article.querySelectorAll("pre > code.language-mermaid").forEach(code => {
+      const div = document.createElement("div");
+      div.className = "mermaid-diagram";
+      div.textContent = code.textContent;
+      code.parentElement.replaceWith(div);
+    });
+    const diagramsReady = renderDiagrams(article);
+
+    if (window.Prism) Prism.highlightAllUnder(article);
+
+    // Inline `code` isn't parsed inside raw <details> HTML, so do it here
+    article.querySelectorAll("summary").forEach(s => {
+      s.innerHTML = s.innerHTML.replace(/`([^`]+)`/g, "<code>$1</code>");
+    });
+
+    article.querySelectorAll(".notes-anchor").forEach(anchor => {
+      const heading = anchor.nextElementSibling;
+      if (!heading || heading.tagName !== "H3") return;
+      const id = anchor.dataset.subtopic;
+      const label = document.createElement("label");
+      label.className = "notes-done-toggle";
+      label.innerHTML = `<input type="checkbox" class="subtopic-checkbox" data-id="${id}" ${state.checkedSubtopics[id] ? "checked" : ""}> Done`;
+      heading.appendChild(label);
+    });
+
+    const headings = [...article.querySelectorAll("h2, h3")];
+    headings.forEach((h, i) => { if (!h.id) h.id = `notes-sec-${i}`; });
+    toc.innerHTML = `<div class="study-toc-title">On this page</div>` + headings.map(h => {
+      const copy = h.cloneNode(true);
+      copy.querySelector(".notes-done-toggle")?.remove();
+      const text = copy.textContent.trim();
+      return `<a href="#${h.id}" class="study-toc-link level-${h.tagName.toLowerCase()}" data-target="${h.id}">${escapeHTML(text)}</a>`;
+    }).join("");
+
+    toc.querySelectorAll(".study-toc-link").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById(link.dataset.target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    article.querySelectorAll(".notes-done-toggle .subtopic-checkbox").forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (cb.checked) state.checkedSubtopics[cb.dataset.id] = true;
+        else delete state.checkedSubtopics[cb.dataset.id];
+        saveState();
+        const scroller = $(".content-scroll");
+        const top = scroller.scrollTop;
+        renderDayDetail(dayNum);
+        scroller.scrollTop = top;
+        renderSidebar();
+      });
+    });
+
+    return diagramsReady;
+  }
+
+  function studyNotesMessageHTML(dayNum) {
+    const notes = notesCache[dayNum];
+    if (!notes || notes.status === "loading") {
+      return `<div class="study-notes-message">Loading notes…</div>`;
+    }
+    if (notes.status === "missing") {
+      return `<div class="study-notes-message">
+        <strong>No study notes for Day ${dayNum} yet.</strong>
+        <p>Add a Markdown file at <code>${notesPath(dayNum)}</code> and it will show up here.</p>
+      </div>`;
+    }
+    const fileHint = location.protocol === "file:"
+      ? `<p>Browsers block reading local files when <code>index.html</code> is opened directly. Serve the folder instead, for example:</p>
+         <pre><code>npx serve .</code></pre>
+         <p>or <code>python -m http.server 8000</code>, then open <code>http://localhost:8000</code>. The VS Code "Live Server" extension or GitHub Pages also work.</p>`
+      : `<p>Check that <code>${notesPath(dayNum)}</code> exists and reload the page.</p>`;
+    return `<div class="study-notes-message"><strong>Couldn't load the study notes.</strong>${fileHint}</div>`;
   }
 
   // ── Helpers ──
@@ -346,6 +521,9 @@
     const isComplete = isDayCompleted(dayNum);
 
     const detail = $("#day-detail");
+    loadDayNotes(dayNum);
+    const notes = notesCache[dayNum];
+    const noteIds = notes.status === "ready" ? notes.ids : new Set();
 
     const categoryTags = day.categories.map(cat => {
       const colors = CATEGORY_COLORS[cat] || { bg: "#333", text: "#999", border: "#666" };
@@ -364,6 +542,7 @@
           <div class="subtopic-item ${isChecked ? 'checked' : ''} ${isHighlighted ? 'search-highlight' : ''}">
             <input type="checkbox" class="subtopic-checkbox" data-id="${sub.id}" ${isChecked ? 'checked' : ''}>
             <label class="subtopic-label" data-id="${sub.id}">${sub.label}</label>
+            ${noteIds.has(sub.id) ? `<button class="subtopic-notes-btn" data-id="${sub.id}" title="Read study notes for this subtopic">${ICONS.bookOpen}</button>` : ""}
           </div>
         `;
       }).join("");
@@ -384,22 +563,27 @@
     const coveredNote = state.notes[`day${dayNum}_covered`] || "";
     const missedNote = state.notes[`day${dayNum}_missed`] || "";
 
-    detail.innerHTML = `
-      <button class="detail-back-btn" id="back-to-grid">
-        ${ICONS.arrowLeft} Back to All Days
-      </button>
-      <div class="detail-header ${isComplete ? 'completed' : ''}">
-        <div class="detail-day-label">Day ${dayNum} · ${day.phase} (${day.phaseRange})</div>
-        <div class="detail-title">${day.title}</div>
-        <div class="detail-meta">
-          <div class="detail-info">${ICONS.clock} ${day.estimatedTime}</div>
-          <div class="detail-info">${categoryTags}</div>
-          <div class="detail-info">${ICONS.checkCircle} ${info.checked}/${info.total} subtopics</div>
-          <button class="mark-complete-btn ${isComplete ? 'completed' : ''}" id="mark-complete-btn">
-            ${isComplete ? ICONS.checkCircle + ' Completed!' : ICONS.checkCircle + ' Mark All Complete'}
-          </button>
-        </div>
+    const tabsHTML = `
+      <div class="detail-tabs">
+        <button class="detail-tab ${state.detailTab === "checklist" ? "active" : ""}" data-tab="checklist">
+          ${ICONS.clipboardList} Checklist &amp; My Notes
+        </button>
+        <button class="detail-tab ${state.detailTab === "study" ? "active" : ""}" data-tab="study">
+          ${ICONS.bookOpen} Study Notes
+          ${notes.status === "ready" ? `<span class="detail-tab-badge">${noteIds.size}</span>` : ""}
+        </button>
       </div>
+    `;
+
+    const studyHTML = `
+      <div class="study-notes">
+        ${notes.status === "ready"
+          ? `<nav class="study-toc" id="study-toc"></nav><article class="md-content" id="study-article">${notes.html}</article>`
+          : studyNotesMessageHTML(dayNum)}
+      </div>
+    `;
+
+    const checklistHTML = `
       <div class="checklist-panel">
         <div class="checklist-section-header">
           <span class="checklist-section-title">${ICONS.clipboardList} Subtopic Checklist</span>
@@ -427,8 +611,81 @@
       </div>
     `;
 
+    detail.innerHTML = `
+      <button class="detail-back-btn" id="back-to-grid">
+        ${ICONS.arrowLeft} Back to All Days
+      </button>
+      <div class="detail-header ${isComplete ? 'completed' : ''}">
+        <div class="detail-day-label">Day ${dayNum} · ${day.phase} (${day.phaseRange})</div>
+        <div class="detail-title">${day.title}</div>
+        <div class="detail-meta">
+          <div class="detail-info">${ICONS.clock} ${day.estimatedTime}</div>
+          <div class="detail-info">${categoryTags}</div>
+          <div class="detail-info">${ICONS.checkCircle} ${info.checked}/${info.total} subtopics</div>
+          <button class="mark-complete-btn ${isComplete ? 'completed' : ''}" id="mark-complete-btn">
+            ${isComplete ? ICONS.checkCircle + ' Completed!' : ICONS.checkCircle + ' Mark All Complete'}
+          </button>
+        </div>
+      </div>
+      ${tabsHTML}
+      ${state.detailTab === "study" ? studyHTML : checklistHTML}
+    `;
+
     // Bind events
     detail.querySelector("#back-to-grid").addEventListener("click", closeDayDetail);
+
+    // Detail tabs
+    detail.querySelectorAll(".detail-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        if (state.detailTab === tab.dataset.tab) return;
+        state.detailTab = tab.dataset.tab;
+        renderDayDetail(dayNum);
+      });
+    });
+
+    // Mark complete button
+    detail.querySelector("#mark-complete-btn").addEventListener("click", () => {
+      const subs = getAllSubtopicsForDay(dayNum);
+      const allChecked = subs.every(s => state.checkedSubtopics[s.id]);
+      subs.forEach(s => {
+        if (allChecked) {
+          delete state.checkedSubtopics[s.id];
+        } else {
+          state.checkedSubtopics[s.id] = true;
+        }
+      });
+      saveState();
+      const scroller = $(".content-scroll");
+      const top = scroller.scrollTop;
+      renderDayDetail(dayNum);
+      scroller.scrollTop = top;
+      renderSidebar();
+      showToast(allChecked ? "Day unmarked" : `Day ${dayNum} marked complete! 🎉`);
+    });
+
+    if (state.detailTab === "study") {
+      const article = detail.querySelector("#study-article");
+      if (article) {
+        const diagramsReady = enhanceStudyNotes(article, detail.querySelector("#study-toc"), dayNum);
+        if (state.pendingNoteScroll) {
+          const target = detail.querySelector(`#note-${state.pendingNoteScroll}`);
+          state.pendingNoteScroll = null;
+          target?.scrollIntoView({ block: "start" });
+          // Diagrams above the target change height when they finish drawing, so scroll again
+          diagramsReady.then(() => { if (target?.isConnected) target.scrollIntoView({ block: "start" }); });
+        }
+      }
+      return;
+    }
+
+    // Open study notes at a specific subtopic
+    detail.querySelectorAll(".subtopic-notes-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.detailTab = "study";
+        state.pendingNoteScroll = btn.dataset.id;
+        renderDayDetail(dayNum);
+      });
+    });
 
     // Checkbox events
     detail.querySelectorAll(".subtopic-checkbox").forEach(cb => {
@@ -455,23 +712,6 @@
           cb.dispatchEvent(new Event("change"));
         }
       });
-    });
-
-    // Mark complete button
-    detail.querySelector("#mark-complete-btn").addEventListener("click", () => {
-      const subs = getAllSubtopicsForDay(dayNum);
-      const allChecked = subs.every(s => state.checkedSubtopics[s.id]);
-      subs.forEach(s => {
-        if (allChecked) {
-          delete state.checkedSubtopics[s.id];
-        } else {
-          state.checkedSubtopics[s.id] = true;
-        }
-      });
-      saveState();
-      renderDayDetail(dayNum);
-      renderSidebar();
-      showToast(allChecked ? "Day unmarked" : `Day ${dayNum} marked complete! 🎉`);
     });
 
     // Note auto-save
@@ -613,6 +853,7 @@
   function openDayDetail(dayNum) {
     state.selectedDay = dayNum;
     state.currentView = "detail";
+    state.detailTab = "checklist";
     $("#days-grid").style.display = "none";
     $("#backlog-view").classList.remove("active");
     const detail = $("#day-detail");
@@ -702,6 +943,13 @@
     const toggle = $("#theme-toggle");
     toggle.innerHTML = theme === "dark" ? ICONS.sun : ICONS.moon;
     saveState();
+    // Diagrams are themed, so redraw open study notes
+    if (state.currentView === "detail" && state.selectedDay && state.detailTab === "study") {
+      const scroller = $(".content-scroll");
+      const top = scroller.scrollTop;
+      renderDayDetail(state.selectedDay);
+      scroller.scrollTop = top;
+    }
   }
 
   // ── Full Render ──
