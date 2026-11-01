@@ -19,6 +19,8 @@
     problemLogs: {},          // { leetcodeSlug: { approach, time, space, attempts, felt, solveAgain, updated } }
     studyMinutes: {},         // { "YYYY-MM-DD": focused minutes from the timer }
     goal: { minutes: 120, items: 10 },   // daily goal
+    practiceDone: {},         // code practice: { exerciseId: { on: "YYYY-MM-DD", level: "E" | "M" | "H" } }
+    practiceFilter: "all",    // "all" | "todo" | "done"
     reviseTab: "due",         // "due" | "cards" | "again"
     currentView: "home",      // "home" | "grid" | "detail" | "backlog" | "sets"
     returnView: "home",       // where "Back" from a day goes
@@ -29,8 +31,9 @@
     categoryFilter: "all",    // "all" | category name
     highlight: null,          // subtopic id or problem slug picked from search, highlighted on its page
     theme: "dark",
-    detailTab: "checklist",   // "checklist" | "study"
-    pendingNoteScroll: null   // subtopic id to scroll to after the study tab renders
+    detailTab: "checklist",   // "checklist" | "study" | "practice"
+    pendingNoteScroll: null,  // subtopic id to scroll to after the study tab renders
+    pendingExerciseScroll: null   // exercise id to scroll to after the practice tab renders
   };
 
   // ── DOM refs ──
@@ -50,6 +53,7 @@
         studyMinutes: state.studyMinutes,
         goal: state.goal,
         goalMetOn: state.goalMetOn,
+        practiceDone: state.practiceDone,
         checkedSubtopics: state.checkedSubtopics,
         notes: state.notes,
         solvedProblems: state.solvedProblems,
@@ -79,6 +83,7 @@
         state.studyMinutes = saved.studyMinutes || {};
         state.goal = { ...state.goal, ...(saved.goal || {}) };
         state.goalMetOn = saved.goalMetOn || null;
+        state.practiceDone = saved.practiceDone || {};
         state.theme = saved.theme || "dark";
       }
     } catch (e) { /* corrupted */ }
@@ -190,6 +195,7 @@
     const diagramsReady = renderDiagrams(article);
 
     if (window.Prism) Prism.highlightAllUnder(article);
+    addCopyButtons(article);
 
     // Inline `code` isn't parsed inside raw <details> HTML, so do it here
     article.querySelectorAll("summary").forEach(s => {
@@ -504,6 +510,7 @@
     });
     xp += sumValues(state.reviewsDone) * XP_PER.review;
     xp += Math.floor(sumValues(state.studyMinutes) / XP_PER.focusMinutes);
+    Object.values(state.practiceDone).forEach(p => { xp += XP_PER[p.level] || 0; });
     return xp;
   }
 
@@ -537,6 +544,7 @@
       level: getLevelInfo().level,
       reviews: sumValues(state.reviewsDone),
       focusHours: Math.floor(sumValues(state.studyMinutes) / 60),
+      exercises: Object.keys(state.practiceDone).length,
       categories: ["Java", "Spring Boot", "DSA", "System Design", "DB/DevOps"].map(getCategoryStats)
     };
   }
@@ -556,6 +564,8 @@
     { id: "solve-50", icon: "🎯", name: "Problem Solver", desc: "Solve 50 problems", goal: c => [c.solved, 50] },
     { id: "solve-150", icon: "🚀", name: "Grinder", desc: "Solve 150 problems", goal: c => [c.solved, 150] },
     { id: "hard-10", icon: "🐉", name: "Dragon Slayer", desc: "Solve 10 Hard problems", goal: c => [c.hardSolved, 10] },
+    { id: "code-1", icon: "⌨️", name: "Hands On", desc: "Solve your first code exercise", goal: c => [c.exercises, 1] },
+    { id: "code-25", icon: "🛠️", name: "Code Crafter", desc: "Solve 25 code exercises", goal: c => [c.exercises, 25] },
     { id: "notes-5", icon: "📝", name: "Note Taker", desc: "Write takeaways for 5 days", goal: c => [c.notedDays, 5] },
     { id: "review-50", icon: "🧠", name: "Memory Builder", desc: "Do 50 revisions", goal: c => [c.reviews, 50] },
     { id: "review-300", icon: "🏛️", name: "Memory Palace", desc: "Do 300 revisions", goal: c => [c.reviews, 300] },
@@ -685,6 +695,8 @@
 
   // ── Lucide-like SVG Icons ──
   const ICONS = {
+    code: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>`,
+    copy: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
     rocket: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
     search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
     sun: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
@@ -885,6 +897,9 @@
 
     const detail = $("#day-detail");
     loadDayNotes(dayNum);
+    if (hasPractice(dayNum) && !practiceCache[dayNum]) {
+      loadPractice(dayNum).then(() => { if (state.currentView === "detail" && state.selectedDay === dayNum) renderDayDetail(dayNum); });
+    }
     const notes = notesCache[dayNum];
     const noteIds = notes.status === "ready" ? notes.ids : new Set();
 
@@ -926,12 +941,17 @@
     const tabsHTML = `
       <div class="detail-tabs">
         <button class="detail-tab ${state.detailTab === "checklist" ? "active" : ""}" data-tab="checklist">
-          ${ICONS.clipboardList} Checklist<span class="hide-sm">&nbsp;&amp; My Notes</span>
+          ${ICONS.clipboardList} <span>Checklist<span class="hide-sm"> &amp; My Notes</span></span>
         </button>
         <button class="detail-tab ${state.detailTab === "study" ? "active" : ""}" data-tab="study">
           ${ICONS.bookOpen} Study Notes
           ${notes.status === "ready" ? `<span class="detail-tab-badge">${noteIds.size}</span>` : ""}
         </button>
+        ${hasPractice(dayNum) ? `
+          <button class="detail-tab ${state.detailTab === "practice" ? "active" : ""}" data-tab="practice">
+            ${ICONS.code} <span><span class="hide-sm">Code </span>Practice</span>
+            ${practiceBadgeHTML(dayNum)}
+          </button>` : ""}
       </div>
     `;
 
@@ -1009,7 +1029,7 @@
         </div>
       </div>
       ${tabsHTML}
-      ${state.detailTab === "study" ? studyHTML : checklistHTML}
+      ${state.detailTab === "study" ? studyHTML : state.detailTab === "practice" ? practiceTabHTML(dayNum) : checklistHTML}
     `;
 
     // Bind events
@@ -1046,6 +1066,18 @@
       if (allChecked) showToast("Day unmarked", "info");
       else celebrateProgress(before);
     });
+
+    if (state.detailTab === "practice") {
+      bindPractice(detail, () => {
+        const badge = detail.querySelector(".detail-tab[data-tab='practice'] .detail-tab-badge");
+        if (badge) badge.outerHTML = practiceBadgeHTML(dayNum);
+      });
+      if (state.pendingExerciseScroll) {
+        detail.querySelector(`#ex-${state.pendingExerciseScroll}`)?.scrollIntoView({ block: "start" });
+        state.pendingExerciseScroll = null;
+      }
+      return;
+    }
 
     if (state.detailTab === "study") {
       const article = detail.querySelector("#study-article");
@@ -1436,8 +1468,8 @@
   }
 
   // ── View switching ──
-  const VIEW_SECTIONS = { home: "#home-view", grid: "#roadmap-view", revise: "#revise-view", detail: "#day-detail", backlog: "#backlog-view", sets: "#sets-view" };
-  const RETURN_LABELS = { home: "Dashboard", grid: "Roadmap", revise: "Revise" };
+  const VIEW_SECTIONS = { home: "#home-view", grid: "#roadmap-view", revise: "#revise-view", practice: "#practice-view", detail: "#day-detail", backlog: "#backlog-view", sets: "#sets-view" };
+  const RETURN_LABELS = { home: "Dashboard", grid: "Roadmap", revise: "Revise", practice: "Practice" };
 
   function showSection(view) {
     Object.entries(VIEW_SECTIONS).forEach(([name, sel]) => $(sel).classList.toggle("active", name === view));
@@ -1449,7 +1481,7 @@
     else if (state.currentView !== "detail") state.returnView = "grid";
     state.selectedDay = dayNum;
     state.currentView = "detail";
-    state.detailTab = tab;
+    state.detailTab = tab === "practice" && !hasPractice(dayNum) ? "checklist" : tab;
     showSection("detail");
     renderDayDetail(dayNum);
     renderSidebar();
@@ -1473,6 +1505,8 @@
       renderDaysGrid();
     } else if (view === "revise") {
       renderReviseView();
+    } else if (view === "practice") {
+      renderPracticeView();
     } else if (view === "backlog") {
       renderBacklogView();
       renderSubjectProgress();
@@ -1650,6 +1684,7 @@
           <div class="mission-actions">
             <button class="btn primary" id="mission-start">${info.checked ? "Continue" : "Start"} Day ${currentDay} ${ICONS.arrowRight}</button>
             <button class="btn" id="mission-notes">${ICONS.bookOpen} Study notes</button>
+            ${hasPractice(currentDay) ? `<button class="btn" id="mission-practice">${ICONS.code} Code practice</button>` : ""}
           </div>
         </section>
 
@@ -1753,6 +1788,7 @@
     // Interactions
     $("#mission-start").addEventListener("click", () => openDayDetail(currentDay));
     $("#mission-notes").addEventListener("click", () => openDayDetail(currentDay, "study"));
+    $("#mission-practice")?.addEventListener("click", () => openDayDetail(currentDay, "practice"));
     $("#home-sets").addEventListener("click", () => openSet(null));
     $("#home-roadmap").addEventListener("click", () => switchView("grid"));
     $("#home-badges").addEventListener("click", () => switchView("backlog"));
@@ -1822,6 +1858,7 @@
       reviewsDone: state.reviewsDone,
       problemLogs: state.problemLogs,
       studyMinutes: state.studyMinutes,
+      practiceDone: state.practiceDone,
       goal: state.goal
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1844,7 +1881,7 @@
         if (data.solvedProblems) state.solvedProblems = data.solvedProblems;
         if (data.activity) state.activity = data.activity;
         if (typeof data.profileName === "string") state.profileName = data.profileName;
-        ["reviews", "reviewsDone", "problemLogs", "studyMinutes"].forEach(k => { if (data[k]) state[k] = data[k]; });
+        ["reviews", "reviewsDone", "problemLogs", "studyMinutes", "practiceDone"].forEach(k => { if (data[k]) state[k] = data[k]; });
         if (data.goal) state.goal = { ...state.goal, ...data.goal };
         state.seenAchievements = getAchievements().filter(a => a.unlocked).map(a => a.id);   // no confetti burst for imported badges
         saveState();
@@ -1867,6 +1904,7 @@
     state.reviewsDone = {};
     state.problemLogs = {};
     state.studyMinutes = {};
+    state.practiceDone = {};
     resetTimer();
     saveState();
     switchView("home");
@@ -2419,6 +2457,295 @@
       showToast(empty ? "Log cleared" : next.solveAgain ? "Log saved · added to Solve again 🔁" : "Log saved 📝");
     });
     setTimeout(() => overlay.querySelector("#log-approach").focus(), 50);
+  }
+
+  // ── Code practice (Markdown files in practice/day-NN.md) ──
+  // Days that have a practice file; add the day here when its file is written
+  const PRACTICE_DAYS = [1, 2, 3, 4, 5, 6, 7, 8];
+  const PRACTICE_LEVELS = { Easy: "E", Medium: "M", Hard: "H" };
+  const practiceCache = {};   // day → { status: "loading" | "ready" | "error", intro, exercises, promise }
+  const exerciseById = {};
+  const hintsShown = {};      // exercise id → hints revealed (resets on reload, on purpose)
+  let allPracticePromise = null;
+
+  const hasPractice = (day) => PRACTICE_DAYS.includes(day);
+  const practicePath = (day) => `practice/day-${String(day).padStart(2, "0")}.md`;
+  const mdToHTML = (md) => (typeof marked !== "undefined" ? marked.parse(md) : `<pre>${escapeHTML(md)}</pre>`);
+  const mdInline = (md) => (typeof marked !== "undefined" ? marked.parseInline(md) : escapeHTML(md));
+
+  // <!-- exercise: id | Easy | Title -->  task…  <!-- hints -->  - one hint per line  <!-- solution -->  code + why
+  function parsePractice(md, day) {
+    const parts = md.split(/^<!--\s*exercise:\s*(.+?)\s*-->\s*$/m);
+    const exercises = [];
+    for (let i = 1; i < parts.length; i += 2) {
+      const [id, levelName, ...title] = parts[i].split("|").map(x => x.trim());
+      const [task, rest = ""] = parts[i + 1].split(/^<!--\s*hints\s*-->\s*$/m);
+      const [hintsMd, solution = ""] = rest.split(/^<!--\s*solution\s*-->\s*$/m);
+      const ex = {
+        id, day, num: exercises.length + 1,
+        level: PRACTICE_LEVELS[levelName] || "M",
+        title: title.join("|"),
+        task, solution,
+        hints: hintsMd.split(/\r?\n/).map(line => line.match(/^\s*[-*]\s+(.+)$/)?.[1]).filter(Boolean)
+      };
+      exerciseById[id] = ex;
+      exercises.push(ex);
+    }
+    return { intro: parts[0], exercises };
+  }
+
+  function loadPractice(day) {
+    if (!practiceCache[day]) {
+      const entry = practiceCache[day] = { status: "loading" };
+      entry.promise = fetch(practicePath(day))
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        })
+        .then(md => Object.assign(entry, { status: "ready" }, parsePractice(md, day)))
+        .catch(() => { entry.status = "error"; });
+    }
+    return practiceCache[day].promise;
+  }
+
+  const loadAllPractice = () => (allPracticePromise = allPracticePromise || Promise.all(PRACTICE_DAYS.map(loadPractice)));
+  const practiceLoaded = (day) => practiceCache[day] && practiceCache[day].status !== "loading";
+  const dayExercises = (day) => practiceCache[day]?.exercises || [];
+
+  function practiceBadgeHTML(day) {
+    const list = dayExercises(day);
+    if (!list.length) return "";
+    return `<span class="detail-tab-badge">${list.filter(e => state.practiceDone[e.id]).length}/${list.length}</span>`;
+  }
+
+  function togglePracticeDone(ex) {
+    const before = progressSnapshot();
+    if (state.practiceDone[ex.id]) {
+      delete state.practiceDone[ex.id];
+    } else {
+      state.practiceDone[ex.id] = { on: dateKey(), level: ex.level };
+      recordActivity();
+    }
+    saveState();
+    renderSidebar();
+    if (state.practiceDone[ex.id]) celebrateProgress(before);
+  }
+
+  function runTipHTML() {
+    return `
+      <div class="run-tip">
+        <span class="run-tip-icon">☕</span>
+        <div>
+          <strong>Run these in your own IDE</strong>
+          <p>Each exercise is a single file with a <code>main</code> method. Save it under the class name (for example <code>BankAccount.java</code>) and press Run in IntelliJ or VS Code, or run <code>java BankAccount.java</code> from a terminal (JDK 17+). Type it yourself first, use the hints when stuck, and open the solution last.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function exerciseCardHTML(ex) {
+    const done = state.practiceDone[ex.id];
+    const shown = hintsShown[ex.id] || 0;
+    const d = DIFFICULTY[ex.level];
+    ex.html = ex.html || { title: mdInline(ex.title), task: mdToHTML(ex.task), solution: mdToHTML(ex.solution), hints: ex.hints.map(mdInline) };
+    return `
+      <article class="exercise-card ${done ? "done" : ""}" id="ex-${ex.id}" data-ex="${ex.id}">
+        <header class="exercise-head">
+          <span class="exercise-num">${done ? ICONS.check : ex.num}</span>
+          <h3 class="exercise-title">${ex.html.title}</h3>
+          <span class="difficulty-pill ${d.cls}">${d.label}</span>
+        </header>
+        <div class="md-content exercise-task">${ex.html.task}</div>
+        ${ex.hints.length ? `
+          <div class="exercise-hints">
+            ${ex.html.hints.slice(0, shown).map((h, n) => `<div class="hint"><span class="hint-num">Hint ${n + 1}</span><span>${h}</span></div>`).join("")}
+            ${shown < ex.hints.length ? `<button class="btn small hint-btn">💡 ${shown ? "Next hint" : "Show a hint"} <span class="hint-count">${shown + 1}/${ex.hints.length}</span></button>` : ""}
+          </div>` : ""}
+        <details class="exercise-solution">
+          <summary>Reference solution <span>try it yourself first</span></summary>
+          <div class="md-content">${ex.html.solution}</div>
+        </details>
+        <div class="exercise-foot">
+          <button class="btn small ${done ? "solved" : "primary"} exercise-done-btn">
+            ${ICONS.checkCircle} ${done ? `Solved${done.on === dateKey() ? " today" : ""} · undo` : "Mark as solved"}
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  function practiceTabHTML(day) {
+    const data = practiceCache[day];
+    if (!data || data.status === "loading") return `<div class="study-notes-message">Loading exercises…</div>`;
+    if (data.status === "error") {
+      return `<div class="study-notes-message"><strong>Couldn't load the exercises.</strong>
+        <p>Check that <code>${practicePath(day)}</code> exists and reload the page.</p></div>`;
+    }
+    return `
+      <div class="practice-panel">
+        <div class="practice-intro">
+          <div class="md-content">${mdToHTML(data.intro)}</div>
+          ${runTipHTML()}
+        </div>
+        ${data.exercises.map(exerciseCardHTML).join("")}
+      </div>
+    `;
+  }
+
+  // Code blocks get a Copy button (wrapped so the button doesn't scroll sideways with long lines)
+  function addCopyButtons(root) {
+    root.querySelectorAll("pre > code").forEach(code => {
+      const pre = code.parentElement;
+      if (pre.parentElement.classList.contains("code-block")) return;
+      const wrap = document.createElement("div");
+      wrap.className = "code-block";
+      pre.replaceWith(wrap);
+      wrap.append(pre);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-copy";
+      btn.title = "Copy code";
+      btn.innerHTML = `${ICONS.copy}<span>Copy</span>`;
+      btn.addEventListener("click", () => {
+        const label = btn.querySelector("span");
+        Promise.resolve(navigator.clipboard ? navigator.clipboard.writeText(code.textContent) : Promise.reject())
+          .then(() => {
+            btn.classList.add("copied");
+            label.textContent = "Copied";
+            setTimeout(() => { btn.classList.remove("copied"); label.textContent = "Copy"; }, 1500);
+          })
+          .catch(() => showToast("Couldn't copy. Select the code and copy it instead.", "error"));
+      });
+      wrap.append(btn);
+    });
+  }
+
+  function bindPractice(root, onChange) {
+    root.querySelectorAll(".exercise-card").forEach(card => bindExerciseCard(card, onChange));
+  }
+
+  function bindExerciseCard(card, onChange) {
+    const ex = exerciseById[card.dataset.ex];
+    if (window.Prism) Prism.highlightAllUnder(card);
+    addCopyButtons(card);
+    const redraw = () => {
+      const open = card.querySelector(".exercise-solution").open;
+      const holder = document.createElement("div");
+      holder.innerHTML = exerciseCardHTML(ex);
+      const fresh = holder.firstElementChild;
+      fresh.querySelector(".exercise-solution").open = open;
+      card.replaceWith(fresh);
+      bindExerciseCard(fresh, onChange);
+    };
+    card.querySelector(".hint-btn")?.addEventListener("click", () => {
+      hintsShown[ex.id] = (hintsShown[ex.id] || 0) + 1;
+      redraw();
+    });
+    card.querySelector(".exercise-done-btn").addEventListener("click", () => {
+      togglePracticeDone(ex);
+      redraw();
+      onChange?.();
+    });
+  }
+
+  function renderPracticeView() {
+    const container = $("#practice-view");
+    const header = `
+      <div class="view-header">
+        <div>
+          <h2 class="view-title">Code Practice</h2>
+          <p class="view-subtitle">Small Java programs for each day's concepts. Write them in your own IDE, run them, and the theory turns into muscle memory.</p>
+        </div>
+      </div>
+    `;
+    if (!PRACTICE_DAYS.every(practiceLoaded)) {
+      container.innerHTML = `${header}<div class="study-notes-message">Loading exercises…</div>`;
+      loadAllPractice().then(() => { if (state.currentView === "practice") renderPracticeView(); });
+      return;
+    }
+
+    const all = PRACTICE_DAYS.flatMap(dayExercises);
+    const solved = all.filter(e => state.practiceDone[e.id]);
+    const today = dateKey();
+    const solvedToday = Object.values(state.practiceDone).filter(p => p.on === today).length;
+    const next = all.find(e => !state.practiceDone[e.id]);
+    const fullDays = PRACTICE_DAYS.filter(d => dayExercises(d).length && dayExercises(d).every(e => state.practiceDone[e.id])).length;
+    const levelCounts = ["E", "M", "H"].map(key => {
+      const list = all.filter(e => e.level === key);
+      return `<span class="difficulty-count ${DIFFICULTY[key].cls}">${DIFFICULTY[key].label} ${list.filter(e => state.practiceDone[e.id]).length}/${list.length}</span>`;
+    }).join("");
+
+    const filters = [["all", "All", all.length], ["todo", "To do", all.length - solved.length], ["done", "Solved", solved.length]];
+    const show = (e) => state.practiceFilter === "all" || (state.practiceFilter === "done") === !!state.practiceDone[e.id];
+
+    const groups = PRACTICE_DAYS.map(day => {
+      const list = dayExercises(day);
+      const rows = list.filter(show);
+      if (!rows.length) return "";
+      const doneCount = list.filter(e => state.practiceDone[e.id]).length;
+      return `
+        <section class="practice-day ${doneCount === list.length ? "complete" : ""}">
+          <button class="practice-day-head" data-day="${day}">
+            <span class="practice-day-num">Day ${day}</span>
+            <span class="practice-day-title">${escapeHTML(getDayData(day).title)}</span>
+            <span class="practice-day-count">${doneCount}/${list.length}</span>
+          </button>
+          <div class="practice-rows">
+            ${rows.map(e => `
+              <button class="practice-row ${state.practiceDone[e.id] ? "done" : ""}" data-day="${day}" data-ex="${e.id}">
+                <span class="practice-check">${state.practiceDone[e.id] ? ICONS.check : e.num}</span>
+                <span class="practice-row-title">${mdInline(e.title)}</span>
+                <span class="difficulty-pill ${DIFFICULTY[e.level].cls}">${DIFFICULTY[e.level].label}</span>
+              </button>`).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    container.innerHTML = `
+      ${header}
+      <div class="revise-stats">
+        <div class="revise-stat"><strong>${solved.length}/${all.length}</strong><span>exercises solved</span></div>
+        <div class="revise-stat"><strong>${solvedToday}</strong><span>solved today</span></div>
+        <div class="revise-stat"><strong>${fullDays}/${PRACTICE_DAYS.length}</strong><span>days fully practised</span></div>
+        <div class="revise-stat practice-levels"><div class="difficulty-counts">${levelCounts}</div><span>by difficulty</span></div>
+      </div>
+      ${next ? `
+        <div class="practice-next card">
+          <div>
+            <div class="card-title">${ICONS.code} Up next</div>
+            <div class="practice-next-title">${mdInline(next.title)}</div>
+            <div class="practice-next-meta">Day ${next.day} · ${escapeHTML(getDayData(next.day).title)}</div>
+          </div>
+          <button class="btn primary" data-day="${next.day}" data-ex="${next.id}">Start coding ${ICONS.arrowRight}</button>
+        </div>` : `
+        <div class="practice-next card">
+          <div>
+            <div class="card-title">🏆 All caught up</div>
+            <div class="practice-next-title">Every exercise so far is solved. Try rewriting one from memory.</div>
+          </div>
+        </div>`}
+      ${runTipHTML()}
+      <div class="revise-tabs" role="tablist">
+        ${filters.map(([key, label, count]) => `
+          <button class="revise-tab ${state.practiceFilter === key ? "active" : ""}" data-filter="${key}">
+            ${label}<span class="revise-tab-count">${count}</span>
+          </button>`).join("")}
+      </div>
+      <div class="practice-groups">
+        ${groups || `<div class="study-notes-message">${state.practiceFilter === "done" ? "Nothing solved yet. Pick an exercise and open your IDE." : "Nothing left to do here. 🎉"}</div>`}
+      </div>
+      <p class="practice-footnote">More days get exercises as the plan goes on.</p>
+    `;
+
+    container.querySelectorAll("[data-filter]").forEach(btn => btn.addEventListener("click", () => {
+      state.practiceFilter = btn.dataset.filter;
+      renderPracticeView();
+    }));
+    container.querySelectorAll("[data-day]").forEach(el => el.addEventListener("click", () => {
+      state.pendingExerciseScroll = el.dataset.ex || null;
+      openDayDetail(parseInt(el.dataset.day), "practice");
+    }));
   }
 
   // ── Focus timer (Pomodoro) ──
