@@ -10,7 +10,12 @@
     checkedSubtopics: {},     // { subtopicId: true }
     notes: {},                // { dayN_covered: "text", dayN_missed: "text" }
     solvedProblems: {},       // { leetcodeSlug: true }
-    currentView: "grid",      // "grid" | "detail" | "backlog" | "sets"
+    activity: {},             // { "YYYY-MM-DD": number of items ticked that day } — drives the streak
+    profileName: "",          // shown in the dashboard greeting
+    seenAchievements: null,   // achievement ids already celebrated (null until first run)
+    lastPalette: -1,          // palette used on the previous visit, so the next one differs
+    currentView: "home",      // "home" | "grid" | "detail" | "backlog" | "sets"
+    returnView: "home",       // where "Back" from a day goes
     selectedSet: null,        // question set id, or null for the sets index
     setFilter: "all",         // "all" | "E" | "M" | "H" | "unsolved"
     selectedDay: null,         // day number
@@ -35,6 +40,10 @@
         checkedSubtopics: state.checkedSubtopics,
         notes: state.notes,
         solvedProblems: state.solvedProblems,
+        activity: state.activity,
+        profileName: state.profileName,
+        seenAchievements: state.seenAchievements,
+        lastPalette: state.lastPalette,
         theme: state.theme
       }));
     } catch (e) { /* quota exceeded */ }
@@ -47,6 +56,10 @@
         state.checkedSubtopics = saved.checkedSubtopics || {};
         state.notes = saved.notes || {};
         state.solvedProblems = saved.solvedProblems || {};
+        state.activity = saved.activity || {};
+        state.profileName = saved.profileName || "";
+        state.seenAchievements = Array.isArray(saved.seenAchievements) ? saved.seenAchievements : null;
+        state.lastPalette = Number.isInteger(saved.lastPalette) ? saved.lastPalette : -1;
         state.theme = saved.theme || "dark";
       }
     } catch (e) { /* corrupted */ }
@@ -186,20 +199,28 @@
     toc.querySelectorAll(".study-toc-link").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
+        toc.classList.remove("open");   // the TOC is a collapsible dropdown on phones
         document.getElementById(link.dataset.target)?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     });
+    toc.querySelector(".study-toc-title").addEventListener("click", () => toc.classList.toggle("open"));
 
     article.querySelectorAll(".notes-done-toggle .subtopic-checkbox").forEach(cb => {
       cb.addEventListener("change", () => {
-        if (cb.checked) state.checkedSubtopics[cb.dataset.id] = true;
-        else delete state.checkedSubtopics[cb.dataset.id];
+        const before = progressSnapshot();
+        if (cb.checked) {
+          state.checkedSubtopics[cb.dataset.id] = true;
+          recordActivity();
+        } else {
+          delete state.checkedSubtopics[cb.dataset.id];
+        }
         saveState();
         const scroller = $(".content-scroll");
         const top = scroller.scrollTop;
         renderDayDetail(dayNum);
         scroller.scrollTop = top;
         renderSidebar();
+        if (cb.checked) celebrateProgress(before);
       });
     });
 
@@ -308,15 +329,6 @@
     };
   }
 
-  function getStreak() {
-    let streak = 0;
-    for (let i = 1; i <= 60; i++) {
-      if (isDayCompleted(i)) streak++;
-      else break;
-    }
-    return streak;
-  }
-
   function getCurrentDay() {
     let current = 1;
     for (let i = 1; i <= 60; i++) {
@@ -353,6 +365,282 @@
     return { completed, "in-progress": inProgress, pending, "has-missed": hasMissed };
   }
 
+  function getPhases() {
+    const phases = [];
+    CURRICULUM_DATA.forEach(d => {
+      let phase = phases.find(p => p.name === d.phase);
+      if (!phase) {
+        phase = { name: d.phase, range: d.phaseRange, days: [] };
+        phases.push(phase);
+      }
+      phase.days.push(d.day);
+    });
+    return phases.map((p, i) => {
+      const done = p.days.filter(isDayCompleted).length;
+      const subs = p.days.map(getDayCompletionInfo);
+      const total = subs.reduce((a, s) => a + s.total, 0);
+      const checked = subs.reduce((a, s) => a + s.checked, 0);
+      return {
+        ...p,
+        index: i + 1,
+        shortName: p.name.replace(/^Phase \d+:\s*/, ""),
+        doneDays: done,
+        percentage: total ? Math.round((checked / total) * 100) : 0,
+        started: checked > 0
+      };
+    });
+  }
+
+  // ── Fresh look every visit: palettes + quotes ──
+  const PALETTES = [
+    { name: "Aurora",  colors: ["#7c5cff", "#22d3ee", "#34d399"] },
+    { name: "Sunset",  colors: ["#ff6b6b", "#ff8e3c", "#ffd166"] },
+    { name: "Ocean",   colors: ["#3b82f6", "#06b6d4", "#a78bfa"] },
+    { name: "Nebula",  colors: ["#c026d3", "#8b5cf6", "#60a5fa"] },
+    { name: "Forest",  colors: ["#10b981", "#84cc16", "#22d3ee"] },
+    { name: "Candy",   colors: ["#ec4899", "#a855f7", "#38bdf8"] },
+    { name: "Ember",   colors: ["#f97316", "#ef4444", "#ec4899"] },
+    { name: "Glacier", colors: ["#0ea5e9", "#6366f1", "#2dd4bf"] }
+  ];
+
+  function applyPalette(index) {
+    const [a1, a2, a3] = PALETTES[index].colors;
+    const root = document.documentElement.style;
+    root.setProperty("--a1", a1);
+    root.setProperty("--a2", a2);
+    root.setProperty("--a3", a3);
+    state.lastPalette = index;
+    saveState();
+  }
+
+  function shufflePalette() {
+    let next;
+    do { next = Math.floor(Math.random() * PALETTES.length); } while (next === state.lastPalette && PALETTES.length > 1);
+    applyPalette(next);
+    return PALETTES[next];
+  }
+
+  const QUOTES = [
+    ["The secret of getting ahead is getting started.", "Mark Twain (attributed)"],
+    ["It always seems impossible until it's done.", "Nelson Mandela"],
+    ["First, solve the problem. Then, write the code.", "John Johnson"],
+    ["Simplicity is prerequisite for reliability.", "Edsger W. Dijkstra"],
+    ["Talk is cheap. Show me the code.", "Linus Torvalds"],
+    ["Make it work, make it right, make it fast.", "Kent Beck"],
+    ["Success is the sum of small efforts, repeated day in and day out.", "Robert Collier"],
+    ["Don't watch the clock; do what it does. Keep going.", "Sam Levenson"],
+    ["The expert in anything was once a beginner.", "Helen Hayes"],
+    ["You don't have to be great to start, but you have to start to be great.", "Zig Ziglar"],
+    ["Done is better than perfect.", "Sheryl Sandberg"],
+    ["Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", "Martin Fowler"],
+    ["One more subtopic today is one less question you'll freeze on in the interview.", "Your future self"],
+    ["Consistency beats intensity. Show up again tomorrow.", "Your future self"],
+    ["The offer letter is built one checkbox at a time.", "Your future self"],
+    ["Today's confusion is next month's confident interview answer.", "Your future self"],
+    ["Recursion tip: trust the smaller problem. The same goes for you.", "Your future self"],
+    ["Every Hard problem is just a few Mediums wearing a trench coat.", "Your future self"],
+    ["You won't remember the hours. You'll remember that you didn't quit.", "Your future self"],
+    ["Interviewers don't want perfect. They want someone who can reason out loud. Practise that today.", "Your future self"],
+    ["Two focused hours beat six distracted ones. Close the other tabs.", "Your future self"],
+    ["Big-O of giving up: you lose everything. Big-O of one more day: constant time.", "Your future self"]
+  ];
+  let quoteIndex = Math.floor(Math.random() * QUOTES.length);
+
+  // ── Activity, streaks, XP and levels ──
+  function dateKey(date) {
+    const d = date || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function recordActivity(count = 1) {
+    if (count <= 0) return;
+    const key = dateKey();
+    state.activity[key] = (state.activity[key] || 0) + count;
+  }
+
+  // Current streak counts back from today (or from yesterday if nothing is ticked yet today)
+  function getStudyStreak() {
+    const has = (d) => (state.activity[dateKey(d)] || 0) > 0;
+    const day = new Date();
+    const studiedToday = has(day);
+    if (!studiedToday) day.setDate(day.getDate() - 1);
+    let current = 0;
+    while (has(day)) {
+      current++;
+      day.setDate(day.getDate() - 1);
+    }
+
+    const keys = Object.keys(state.activity).filter(k => state.activity[k] > 0).sort();
+    let best = 0, run = 0, prev = null;
+    keys.forEach(k => {
+      const d = new Date(k + "T00:00:00");
+      run = prev && (d - prev) / 86400000 === 1 ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = d;
+    });
+    return { current, best: Math.max(best, current), studiedToday, activeDays: keys.length };
+  }
+
+  const XP_PER = { subtopic: 10, E: 10, M: 20, H: 40 };
+  const LEVEL_TITLES = [
+    [1, "Curious Coder"], [3, "Bug Squasher"], [5, "Code Apprentice"], [7, "Junior Engineer"],
+    [9, "Software Engineer"], [11, "Senior Engineer"], [13, "Tech Lead"], [15, "Staff Engineer"], [17, "Principal Engineer"]
+  ];
+
+  function getXP() {
+    let xp = Object.keys(state.checkedSubtopics).length * XP_PER.subtopic;
+    getUniqueProblems().forEach(u => {
+      if (state.solvedProblems[u.problem[2]]) xp += XP_PER[u.problem[3]] || 0;
+    });
+    return xp;
+  }
+
+  // Level n starts at 50·n·(n-1) XP: 0, 100, 300, 600, 1000…
+  function getLevelInfo(xp = getXP()) {
+    let level = 1;
+    while (50 * (level + 1) * level <= xp) level++;
+    const floor = 50 * level * (level - 1);
+    const next = 50 * (level + 1) * level;
+    const title = LEVEL_TITLES.filter(([min]) => level >= min).pop()[1];
+    return { xp, level, title, floor, next, percentage: Math.round(((xp - floor) / (next - floor)) * 100) };
+  }
+
+  // ── Achievements ──
+  function achievementContext() {
+    const unique = getUniqueProblems();
+    const solved = unique.filter(u => state.solvedProblems[u.problem[2]]);
+    const completedDays = CURRICULUM_DATA.filter(d => isDayCompleted(d.day)).length;
+    const streak = getStudyStreak();
+    const notedDays = CURRICULUM_DATA.filter(d => (state.notes[`day${d.day}_covered`] || "").trim()).length;
+    return {
+      subs: Object.keys(state.checkedSubtopics).length,
+      completedDays,
+      firstWeek: [1, 2, 3, 4, 5, 6, 7].filter(isDayCompleted).length,
+      phases: getPhases(),
+      solved: solved.length,
+      hardSolved: solved.filter(u => u.problem[3] === "H").length,
+      totalProblems: unique.length,
+      bestStreak: streak.best,
+      notedDays,
+      level: getLevelInfo().level,
+      categories: ["Java", "Spring Boot", "DSA", "System Design", "DB/DevOps"].map(getCategoryStats)
+    };
+  }
+
+  const ACHIEVEMENTS = [
+    { id: "first-step", icon: "👣", name: "First Step", desc: "Tick your first subtopic", goal: c => [c.subs, 1] },
+    { id: "day-one", icon: "🌅", name: "Day One Done", desc: "Complete Day 1", goal: c => [isDayCompleted(1) ? 1 : 0, 1] },
+    { id: "week-one", icon: "📅", name: "Week One Warrior", desc: "Complete Days 1–7", goal: c => [c.firstWeek, 7] },
+    { id: "phase-1", icon: "☕", name: "Java Foundations", desc: "Finish Phase 1", goal: c => [c.phases[0]?.doneDays || 0, c.phases[0]?.days.length || 1] },
+    { id: "subs-100", icon: "💯", name: "Century", desc: "Tick 100 subtopics", goal: c => [c.subs, 100] },
+    { id: "halfway", icon: "⛰️", name: "Halfway There", desc: "Complete 30 days", goal: c => [c.completedDays, 30] },
+    { id: "finisher", icon: "🏁", name: "Interview Ready", desc: "Complete all 60 days", goal: c => [c.completedDays, 60] },
+    { id: "streak-3", icon: "🔥", name: "Warming Up", desc: "3-day study streak", goal: c => [c.bestStreak, 3] },
+    { id: "streak-7", icon: "⚡", name: "On Fire", desc: "7-day study streak", goal: c => [c.bestStreak, 7] },
+    { id: "streak-21", icon: "🌋", name: "Unstoppable", desc: "21-day study streak", goal: c => [c.bestStreak, 21] },
+    { id: "solve-1", icon: "🧩", name: "Hello LeetCode", desc: "Solve your first problem", goal: c => [c.solved, 1] },
+    { id: "solve-50", icon: "🎯", name: "Problem Solver", desc: "Solve 50 problems", goal: c => [c.solved, 50] },
+    { id: "solve-150", icon: "🚀", name: "Grinder", desc: "Solve 150 problems", goal: c => [c.solved, 150] },
+    { id: "hard-10", icon: "🐉", name: "Dragon Slayer", desc: "Solve 10 Hard problems", goal: c => [c.hardSolved, 10] },
+    { id: "notes-5", icon: "📝", name: "Note Taker", desc: "Write takeaways for 5 days", goal: c => [c.notedDays, 5] },
+    { id: "level-5", icon: "⭐", name: "Level 5", desc: "Reach level 5", goal: c => [c.level, 5] },
+    { id: "level-10", icon: "🌟", name: "Level 10", desc: "Reach level 10", goal: c => [c.level, 10] },
+    { id: "master", icon: "👑", name: "Subject Master", desc: "100% in any subject", goal: c => [Math.max(...c.categories.map(s => s.percentage)), 100] }
+  ];
+
+  function getAchievements() {
+    const ctx = achievementContext();
+    return ACHIEVEMENTS.map(a => {
+      const [have, need] = a.goal(ctx);
+      return { ...a, have: Math.min(have, need), need, unlocked: have >= need };
+    });
+  }
+
+  function badgeHTML(a, withDesc) {
+    return `
+      <div class="badge ${a.unlocked ? "unlocked" : ""}" title="${a.name}: ${a.desc}">
+        <div class="badge-icon">${a.icon}</div>
+        <div class="badge-name">${a.name}</div>
+        ${withDesc ? `<div class="badge-desc">${a.desc}</div>` : ""}
+        ${a.unlocked ? "" : `<div class="badge-progress">${a.have}/${a.need}</div>`}
+      </div>
+    `;
+  }
+
+  // Take a snapshot before a change, then celebrate whatever the change unlocked
+  function progressSnapshot() {
+    return {
+      level: getLevelInfo().level,
+      completed: new Set(CURRICULUM_DATA.filter(d => isDayCompleted(d.day)).map(d => d.day))
+    };
+  }
+
+  function celebrateProgress(before) {
+    const messages = [];
+    const level = getLevelInfo();
+    const newDays = CURRICULUM_DATA.filter(d => isDayCompleted(d.day) && !before.completed.has(d.day));
+    newDays.forEach(d => messages.push(`Day ${d.day} complete! 🎉`));
+    if (level.level > before.level) messages.push(`Level up! You're now Level ${level.level} · ${level.title} ⭐`);
+
+    const unlocked = getAchievements().filter(a => a.unlocked);
+    const seen = new Set(state.seenAchievements || []);
+    const fresh = unlocked.filter(a => !seen.has(a.id));
+    fresh.forEach(a => messages.push(`Badge unlocked: ${a.icon} ${a.name}`));
+    state.seenAchievements = unlocked.map(a => a.id);
+    saveState();
+
+    if (messages.length) {
+      showToast(messages.join(" · "), "celebrate");
+      launchConfetti(newDays.length || fresh.length || level.level > before.level ? 1 : 0.5);
+    }
+  }
+
+  // ── Confetti (tiny canvas implementation, no library) ──
+  function launchConfetti(strength = 1) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = $("#confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    ctx.scale(dpr, dpr);
+
+    const styles = getComputedStyle(document.documentElement);
+    const colors = ["--a1", "--a2", "--a3"].map(v => styles.getPropertyValue(v).trim()).concat(["#ffffff", "#fbbf24"]);
+    const pieces = Array.from({ length: Math.round(160 * strength) }, () => ({
+      x: innerWidth / 2 + (Math.random() - 0.5) * innerWidth * 0.3,
+      y: innerHeight * 0.35,
+      vx: (Math.random() - 0.5) * 16,
+      vy: -Math.random() * 14 - 4,
+      size: Math.random() * 7 + 4,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    }));
+
+    const start = performance.now();
+    (function frame(now) {
+      const t = now - start;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      pieces.forEach(p => {
+        p.vy += 0.35;
+        p.vx *= 0.99;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - t / 2600);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        ctx.restore();
+      });
+      if (t < 2600) requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(start);
+  }
+
   // ── Toast ──
   let toastTimer;
   function showToast(message, type = "success") {
@@ -360,13 +648,14 @@
     const iconMap = {
       success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
       error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
-      info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`
+      info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+      celebrate: `<span style="font-size:1.2rem">🏆</span>`
     };
     toast.className = `toast ${type}`;
     toast.innerHTML = `${iconMap[type] || iconMap.info}<span>${message}</span>`;
     toast.classList.add("visible");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("visible"), 3000);
+    toastTimer = setTimeout(() => toast.classList.remove("visible"), type === "celebrate" ? 4500 : 3000);
   }
 
   // ── Lucide-like SVG Icons ──
@@ -388,23 +677,41 @@
     menu: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
     clipboardList: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>`,
     targetIcon: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    shuffle: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>`,
+    arrowRight: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
+    arrowUp: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`,
     sparkles: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`
   };
 
   // ── Render: Sidebar ──
   function renderSidebar() {
     const stats = getOverallStats();
-    const streak = getStreak();
-    const currentDay = getCurrentDay();
     const statusCounts = getStatusCounts();
 
-    // Quick stats
-    $("#stat-current-day").textContent = currentDay;
-    $("#stat-streak").textContent = streak;
+    // Progress ring
+    $("#sidebar-ring").style.setProperty("--p", stats.percentage);
     $("#stat-days-done").textContent = `${stats.completedDays}/60`;
     $("#stat-subs-done").textContent = `${stats.checkedSubs}/${stats.totalSubs}`;
     $("#stat-percentage").textContent = `${stats.percentage}%`;
-    $("#progress-fill").style.width = `${stats.percentage}%`;
+
+    // Navigation highlight ("detail" keeps the section it was opened from lit)
+    const navView = state.currentView === "detail" ? state.returnView : state.currentView;
+    $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.view === navView));
+
+    // Top bar: streak + level
+    const streak = getStudyStreak();
+    const streakChip = $("#chip-streak");
+    streakChip.innerHTML = `🔥 <strong>${streak.current}</strong> day${streak.current === 1 ? "" : "s"}`;
+    streakChip.classList.toggle("hot", streak.current >= 3);
+    streakChip.title = streak.studiedToday
+      ? `Study streak: ${streak.current} day(s) in a row. Best: ${streak.best}.`
+      : `Tick something today to ${streak.current ? "keep your streak alive" : "start a streak"}. Best: ${streak.best}.`;
+    const lvl = getLevelInfo();
+    $("#chip-level").innerHTML = `
+      <span class="level-badge">${lvl.level}</span>
+      <span class="level-title">${lvl.title}</span>
+      <span class="level-bar"><span class="level-bar-fill" style="width:${lvl.percentage}%"></span></span>`;
+    $("#chip-level").title = `Level ${lvl.level} · ${lvl.xp} XP · ${lvl.next - lvl.xp} XP to level ${lvl.level + 1}`;
 
     // Status filter badges
     $('[data-status="completed"] .filter-badge').textContent = statusCounts.completed;
@@ -435,6 +742,7 @@
   function renderHeatmap() {
     const grid = $("#heatmap-grid");
     grid.innerHTML = "";
+    const currentDay = getCurrentDay();
     for (let i = 1; i <= 60; i++) {
       const cell = document.createElement("div");
       cell.className = "heatmap-cell";
@@ -446,11 +754,19 @@
       if (status === "completed") cell.classList.add("completed");
       else if (status === "in-progress") cell.classList.add("partial");
       if (dayHasMissedNotes(i)) cell.classList.add("has-missed");
+      if (i === currentDay && status !== "completed") cell.classList.add("current");
       if (state.selectedDay === i) cell.classList.add("active");
 
       cell.addEventListener("click", () => openDayDetail(i));
       grid.appendChild(cell);
     }
+  }
+
+  function categoryTagsHTML(categories) {
+    return categories.map(cat => {
+      const colors = CATEGORY_COLORS[cat] || { text: "#999" };
+      return `<span class="category-tag" style="--c:${colors.text}">${cat}</span>`;
+    }).join("");
   }
 
   // ── Render: Day Cards Grid ──
@@ -469,37 +785,31 @@
       return;
     }
 
-    container.innerHTML = filteredDays.map(day => {
+    const currentDay = getCurrentDay();
+    const dayCardHTML = (day) => {
       const info = getDayCompletionInfo(day.day);
       const status = getDayStatus(day.day);
       const hasMissed = dayHasMissedNotes(day.day);
-
-      const categoryTags = day.categories.map(cat => {
-        const colors = CATEGORY_COLORS[cat] || { bg: "#333", text: "#999", border: "#666" };
-        return `<span class="category-tag" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}">${cat}</span>`;
-      }).join("");
+      const isCurrent = day.day === currentDay && status !== "completed";
 
       const statusIconHTML = status === "completed"
-        ? `<div class="day-status-icon" style="background:var(--accent-green);border-color:var(--accent-green)">${ICONS.check}</div>`
+        ? `<div class="day-status-icon">${ICONS.check}</div>`
         : status === "in-progress"
-        ? `<div class="day-status-icon" style="background:var(--accent-yellow-bg);border-color:var(--accent-yellow);color:var(--accent-yellow)"><span style="font-size:8px;font-weight:700">${info.percentage}%</span></div>`
+        ? `<div class="day-status-icon">${info.percentage}%</div>`
         : `<div class="day-status-icon"></div>`;
 
-      const missedBadge = hasMissed
-        ? `<div class="missed-badge">${ICONS.alertCircle} Missed Items</div>`
-        : "";
-
       return `
-        <div class="day-card ${status} ${hasMissed ? 'has-missed' : ''}" data-day="${day.day}">
-          ${missedBadge}
+        <div class="day-card ${status} ${isCurrent ? "current" : ""} ${hasMissed ? "has-missed" : ""}" data-day="${day.day}">
+          ${isCurrent ? `<span class="up-next">Up next</span>` : ""}
           <div class="day-card-header">
-            <span class="day-number">Day ${day.day} · ${day.phase.split(':')[0]}</span>
+            <span class="day-number"><small>Day</small>${String(day.day).padStart(2, "0")}</span>
             ${statusIconHTML}
           </div>
           <div class="day-title">${escapeHTML(day.title)}</div>
+          ${hasMissed ? `<div class="missed-badge">${ICONS.alertCircle} Missed items</div>` : ""}
           <div class="day-meta">
             <span class="day-time">${ICONS.clock} ${day.estimatedTime}</span>
-            <div class="day-categories">${categoryTags}</div>
+            <div class="day-categories">${categoryTagsHTML(day.categories)}</div>
           </div>
           <div class="day-progress-row">
             <div class="day-progress-bar">
@@ -509,7 +819,25 @@
           </div>
         </div>
       `;
-    }).join("");
+    };
+
+    // Group the (filtered) days under their phase
+    container.innerHTML = getPhases()
+      .map(phase => ({ phase, days: filteredDays.filter(d => phase.days.includes(d.day)) }))
+      .filter(group => group.days.length)
+      .map(({ phase, days }) => `
+        <section class="phase-section">
+          <div class="phase-section-head">
+            <span class="phase-section-num">${phase.index}</span>
+            <div>
+              <div class="phase-section-title">${escapeHTML(phase.shortName)}</div>
+              <div class="phase-section-meta">${phase.range} · ${phase.doneDays}/${phase.days.length} days done</div>
+            </div>
+            <div class="bar"><div class="bar-fill" style="width:${phase.percentage}%"></div></div>
+          </div>
+          <div class="phase-cards">${days.map(dayCardHTML).join("")}</div>
+        </section>
+      `).join("");
 
     // Bind click events
     container.querySelectorAll(".day-card").forEach(card => {
@@ -530,10 +858,7 @@
     const notes = notesCache[dayNum];
     const noteIds = notes.status === "ready" ? notes.ids : new Set();
 
-    const categoryTags = day.categories.map(cat => {
-      const colors = CATEGORY_COLORS[cat] || { bg: "#333", text: "#999", border: "#666" };
-      return `<span class="category-tag" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}">${cat}</span>`;
-    }).join("");
+    const categoryTags = categoryTagsHTML(day.categories);
 
     // Build topic groups
     const topicGroupsHTML = day.topics.map((topic, ti) => {
@@ -571,7 +896,7 @@
     const tabsHTML = `
       <div class="detail-tabs">
         <button class="detail-tab ${state.detailTab === "checklist" ? "active" : ""}" data-tab="checklist">
-          ${ICONS.clipboardList} Checklist &amp; My Notes
+          ${ICONS.clipboardList} Checklist<span class="hide-sm">&nbsp;&amp; My Notes</span>
         </button>
         <button class="detail-tab ${state.detailTab === "study" ? "active" : ""}" data-tab="study">
           ${ICONS.bookOpen} Study Notes
@@ -581,6 +906,7 @@
     `;
 
     const studyHTML = `
+      ${notes.status === "ready" ? `<div class="reading-progress"><span id="reading-progress-fill"></span></div>` : ""}
       <div class="study-notes">
         ${notes.status === "ready"
           ? `<nav class="study-toc" id="study-toc"></nav><article class="md-content" id="study-article">${notes.html}</article>`
@@ -635,18 +961,21 @@
 
     detail.innerHTML = `
       <button class="detail-back-btn" id="back-to-grid">
-        ${ICONS.arrowLeft} Back to All Days
+        ${ICONS.arrowLeft} ${state.returnView === "home" ? "Dashboard" : "Roadmap"}
       </button>
       <div class="detail-header ${isComplete ? 'completed' : ''}">
-        <div class="detail-day-label">Day ${dayNum} · ${day.phase} (${day.phaseRange})</div>
-        <div class="detail-title">${escapeHTML(day.title)}</div>
-        <div class="detail-meta">
-          <div class="detail-info">${ICONS.clock} ${day.estimatedTime}</div>
-          <div class="detail-info">${categoryTags}</div>
-          <div class="detail-info">${ICONS.checkCircle} ${info.checked}/${info.total} subtopics</div>
-          <button class="mark-complete-btn ${isComplete ? 'completed' : ''}" id="mark-complete-btn">
-            ${isComplete ? ICONS.checkCircle + ' Completed!' : ICONS.checkCircle + ' Mark All Complete'}
-          </button>
+        <div class="ring" style="--p:${info.percentage}"><span class="ring-value">${info.percentage}%</span></div>
+        <div class="detail-main">
+          <div class="detail-day-label">Day ${dayNum} of 60 · ${day.phase} (${day.phaseRange})</div>
+          <div class="detail-title">${escapeHTML(day.title)}</div>
+          <div class="detail-meta">
+            <div class="detail-info">${ICONS.clock} ${day.estimatedTime}</div>
+            <div class="detail-info">${categoryTags}</div>
+            <div class="detail-info">${ICONS.checkCircle} ${info.checked}/${info.total} subtopics</div>
+            <button class="mark-complete-btn ${isComplete ? 'completed' : ''}" id="mark-complete-btn">
+              ${isComplete ? ICONS.checkCircle + ' Completed!' : ICONS.checkCircle + ' Mark all complete'}
+            </button>
+          </div>
         </div>
       </div>
       ${tabsHTML}
@@ -669,6 +998,8 @@
     detail.querySelector("#mark-complete-btn").addEventListener("click", () => {
       const subs = getAllSubtopicsForDay(dayNum);
       const allChecked = subs.every(s => state.checkedSubtopics[s.id]);
+      const before = progressSnapshot();
+      if (!allChecked) recordActivity(subs.filter(s => !state.checkedSubtopics[s.id]).length);
       subs.forEach(s => {
         if (allChecked) {
           delete state.checkedSubtopics[s.id];
@@ -682,7 +1013,8 @@
       renderDayDetail(dayNum);
       scroller.scrollTop = top;
       renderSidebar();
-      showToast(allChecked ? "Day unmarked" : `Day ${dayNum} marked complete! 🎉`);
+      if (allChecked) showToast("Day unmarked", "info");
+      else celebrateProgress(before);
     });
 
     if (state.detailTab === "study") {
@@ -717,14 +1049,20 @@
     detail.querySelectorAll(".subtopic-checkbox").forEach(cb => {
       cb.addEventListener("change", (e) => {
         const id = e.target.dataset.id;
+        const before = progressSnapshot();
         if (e.target.checked) {
           state.checkedSubtopics[id] = true;
+          recordActivity();
         } else {
           delete state.checkedSubtopics[id];
         }
         saveState();
+        const scroller = $(".content-scroll");
+        const top = scroller.scrollTop;
         renderDayDetail(dayNum);
+        scroller.scrollTop = top;
         renderSidebar();
+        if (e.target.checked) celebrateProgress(before);
       });
     });
 
@@ -921,13 +1259,20 @@
     });
     container.querySelectorAll(".problem-checkbox").forEach(cb => {
       cb.addEventListener("change", () => {
-        if (cb.checked) state.solvedProblems[cb.dataset.slug] = true;
-        else delete state.solvedProblems[cb.dataset.slug];
+        const before = progressSnapshot();
+        if (cb.checked) {
+          state.solvedProblems[cb.dataset.slug] = true;
+          recordActivity();
+        } else {
+          delete state.solvedProblems[cb.dataset.slug];
+        }
         saveState();
         const scroller = $(".content-scroll");
         const top = scroller.scrollTop;
         renderSetsView();
         scroller.scrollTop = top;
+        renderSidebar();
+        if (cb.checked) celebrateProgress(before);
       });
     });
   }
@@ -1043,9 +1388,9 @@
       const stats = getCategoryStats(cat.name);
       const colors = CATEGORY_COLORS[cat.name] || { bg: "#333", text: "#999" };
       return `
-        <div class="subject-card">
+        <div class="subject-card" style="--c:${colors.text}">
           <div class="subject-card-header">
-            <div class="subject-icon" style="background:${colors.bg};font-size:1.2rem">${cat.icon}</div>
+            <div class="subject-icon">${cat.icon}</div>
             <div>
               <div class="subject-name">${cat.name}</div>
               <div class="subject-stat">${stats.checked}/${stats.total} subtopics</div>
@@ -1058,46 +1403,51 @@
         </div>
       `;
     }).join("");
+
+    const achievements = getAchievements();
+    const unlocked = achievements.filter(a => a.unlocked).length;
+    $("#achievements-panel").innerHTML = `
+      <div class="backlog-section">
+        <div class="backlog-section-title">🏆 Achievements (${unlocked}/${achievements.length})</div>
+        <div class="achievements-grid">${achievements.map(a => badgeHTML(a, true)).join("")}</div>
+      </div>
+    `;
   }
 
   // ── View switching ──
-  function openDayDetail(dayNum) {
+  const VIEW_SECTIONS = { home: "#home-view", grid: "#roadmap-view", detail: "#day-detail", backlog: "#backlog-view", sets: "#sets-view" };
+
+  function showSection(view) {
+    Object.entries(VIEW_SECTIONS).forEach(([name, sel]) => $(sel).classList.toggle("active", name === view));
+    $("#to-top")?.classList.remove("visible");
+  }
+
+  function openDayDetail(dayNum, tab = "checklist") {
+    if (state.currentView === "home" || state.currentView === "grid") state.returnView = state.currentView;
+    else if (state.currentView !== "detail") state.returnView = "grid";
     state.selectedDay = dayNum;
     state.currentView = "detail";
-    state.detailTab = "checklist";
-    $("#days-grid").style.display = "none";
-    $("#backlog-view").classList.remove("active");
-    $("#sets-view").classList.remove("active");
-    $$(".view-tab").forEach(t => t.classList.remove("active"));
-    const detail = $("#day-detail");
-    detail.classList.add("active");
+    state.detailTab = tab;
+    showSection("detail");
     renderDayDetail(dayNum);
     renderSidebar();
     $(".content-scroll").scrollTop = 0;
+    closeMobileMenu();
   }
 
   function closeDayDetail() {
     state.selectedDay = null;
-    state.currentView = "grid";
-    $("#day-detail").classList.remove("active");
-    $("#backlog-view").classList.remove("active");
-    $("#sets-view").classList.remove("active");
-    $("#days-grid").style.display = "grid";
-    $$(".view-tab").forEach(t => t.classList.toggle("active", t.dataset.view === "grid"));
-    renderDaysGrid();
-    renderSidebar();
+    switchView(state.returnView || "grid");
   }
 
   function switchView(view) {
     state.currentView = view;
-    $$(".view-tab").forEach(t => t.classList.toggle("active", t.dataset.view === view));
+    if (view !== "detail") state.selectedDay = null;
+    showSection(view);
 
-    $("#days-grid").style.display = view === "grid" ? "grid" : "none";
-    $("#day-detail").classList.remove("active");
-    $("#backlog-view").classList.toggle("active", view === "backlog");
-    $("#sets-view").classList.toggle("active", view === "sets");
-
-    if (view === "grid") {
+    if (view === "home") {
+      renderHomeView();
+    } else if (view === "grid") {
       renderDaysGrid();
     } else if (view === "backlog") {
       renderBacklogView();
@@ -1106,6 +1456,290 @@
       renderSetsView();
     }
     renderSidebar();
+    $(".content-scroll").scrollTop = 0;
+    closeMobileMenu();
+  }
+
+  function closeMobileMenu() {
+    $(".sidebar").classList.remove("open");
+    $("#mobile-overlay").classList.remove("active");
+  }
+
+  // ── Render: Dashboard ──
+  function greetingFor(hour) {
+    if (hour < 5) return "Burning the midnight oil";
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good night";
+  }
+
+  // A subtopic to explain out loud: something already ticked if possible, else something from today
+  function pickRecallItem() {
+    const done = [];
+    CURRICULUM_DATA.forEach(d => d.topics.forEach(t => t.subtopics.forEach(s => {
+      if (state.checkedSubtopics[s.id]) done.push({ day: d, sub: s });
+    })));
+    if (done.length) return { ...done[Math.floor(Math.random() * done.length)], reviewed: true };
+    const today = getDayData(getCurrentDay());
+    const subs = today.topics.flatMap(t => t.subtopics);
+    return { day: today, sub: subs[Math.floor(Math.random() * subs.length)], reviewed: false };
+  }
+
+  function activityCalendarHTML(weeks = 26) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(today);
+    start.setDate(start.getDate() - (weeks - 1) * 7 - ((today.getDay() + 6) % 7));   // Monday, `weeks` weeks ago
+    const max = Math.max(1, ...Object.values(state.activity));
+    let cells = "";
+    const d = new Date(start);
+    for (let n = 0; n < weeks * 7; n++, d.setDate(d.getDate() + 1)) {
+      const count = state.activity[dateKey(d)] || 0;
+      const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / max) * 4));
+      const isToday = d.getTime() === today.getTime();
+      const label = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      cells += `<span class="act-cell ${level ? "l" + level : ""} ${isToday ? "today" : ""} ${d > today ? "future" : ""}" title="${label}: ${count} item${count === 1 ? "" : "s"}"></span>`;
+    }
+    return `
+      <div class="activity-wrap">
+        <div class="activity-days"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
+        <div class="activity-grid">${cells}</div>
+      </div>
+    `;
+  }
+
+  function renderHomeView() {
+    const container = $("#home-view");
+    const now = new Date();
+    const stats = getOverallStats();
+    const streak = getStudyStreak();
+    const lvl = getLevelInfo();
+    const currentDay = getCurrentDay();
+    const day = getDayData(currentDay);
+    const info = getDayCompletionInfo(currentDay);
+    const allDone = stats.completedDays === 60;
+    const unique = getUniqueProblems();
+    const solved = unique.filter(u => state.solvedProblems[u.problem[2]]).length;
+    const [quote, author] = QUOTES[quoteIndex];
+    const recall = pickRecallItem();
+    const phases = getPhases();
+    const currentPhase = phases.find(p => p.days.includes(currentDay));
+    const achievements = getAchievements();
+    // Show unlocked badges first, then the closest locked ones
+    const badgeStrip = [...achievements].sort((a, b) =>
+      (b.unlocked - a.unlocked) || (b.have / b.need - a.have / a.need)).slice(0, 10);
+    const name = state.profileName.trim();
+    const daysLeft = 60 - stats.completedDays;
+    const todayCount = state.activity[dateKey()] || 0;
+
+    const missionTopics = day.topics.map(t => {
+      const checked = t.subtopics.filter(s => state.checkedSubtopics[s.id]).length;
+      const color = CATEGORY_COLORS[t.category]?.text || "#888";
+      return `
+        <div class="mission-topic">
+          <span class="category-dot" style="background:${color}"></span>
+          <span class="mission-topic-name">${escapeHTML(t.name)}</span>
+          <span class="mission-topic-count">${checked}/${t.subtopics.length}</span>
+        </div>`;
+    }).join("");
+
+    const streakNote = streak.studiedToday
+      ? `Nice — ${todayCount} item${todayCount === 1 ? "" : "s"} ticked today. Best streak: ${streak.best}.`
+      : streak.current
+        ? `Tick one item today to keep it alive. Best: ${streak.best}.`
+        : `Tick anything today to start a streak.`;
+
+    const categories = [
+      { name: "Java", icon: "☕" }, { name: "Spring Boot", icon: "🌿" }, { name: "DSA", icon: "🧮" },
+      { name: "System Design", icon: "🏗️" }, { name: "DB/DevOps", icon: "🗄️" }
+    ];
+
+    let i = 0;
+    const r = () => `reveal" style="--i:${i++}`;
+
+    container.innerHTML = `
+      <div class="home-grid">
+        <section class="card hero ${r()}">
+          <div class="hero-date">${now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>
+          <h2 class="hero-greeting">${greetingFor(now.getHours())},<br>
+            <span class="hero-name" id="hero-name" title="Click to change your name">${name ? escapeHTML(name) : "future engineer"}</span> 👋</h2>
+          <p class="hero-sub">${allDone
+            ? `You finished all <strong>60 days</strong>. Keep revising and go get that offer. 🏆`
+            : `You're on <strong>Day ${currentDay}</strong> of 60 — <strong>${stats.percentage}%</strong> of the whole plan done. ${currentPhase ? `This week: <strong>${escapeHTML(currentPhase.shortName)}</strong>.` : ""}`}</p>
+          <div class="quote">
+            <span class="quote-mark">“</span>
+            <div>
+              <div class="quote-text" id="quote-text">${escapeHTML(quote)}</div>
+              <div class="quote-author" id="quote-author">— ${escapeHTML(author)}</div>
+            </div>
+            <button class="quote-shuffle" id="quote-shuffle" title="Another quote">${ICONS.shuffle}</button>
+          </div>
+          <div class="hero-countdown">
+            <div class="countdown-item"><div class="num">${daysLeft}</div><div class="lbl">days to go</div></div>
+            <div class="countdown-item"><div class="num">${stats.checkedSubs}</div><div class="lbl">subtopics mastered</div></div>
+            <div class="countdown-item"><div class="num">${solved}</div><div class="lbl">problems solved</div></div>
+          </div>
+        </section>
+
+        <section class="card mission ${r()}">
+          <div class="mission-top">
+            <div>
+              <div class="mission-label"><span class="pulse-dot"></span>${allDone ? "Revision mode" : "Today's mission"}</div>
+              <div class="mission-day">Day ${currentDay}<span> / 60</span></div>
+            </div>
+            <div class="ring" style="--p:${info.percentage}"><span class="ring-value">${info.percentage}%</span></div>
+          </div>
+          <div class="mission-title">${escapeHTML(day.title)}</div>
+          <div class="mission-meta">${ICONS.clock} ${day.estimatedTime} ${categoryTagsHTML(day.categories)}</div>
+          <div class="mission-topics">${missionTopics}</div>
+          <div class="mission-actions">
+            <button class="btn primary" id="mission-start">${info.checked ? "Continue" : "Start"} Day ${currentDay} ${ICONS.arrowRight}</button>
+            <button class="btn" id="mission-notes">${ICONS.bookOpen} Study notes</button>
+          </div>
+        </section>
+
+        <section class="card stat-tile ${r()}">
+          <span class="stat-emoji">🔥</span>
+          <div class="card-title">Study streak</div>
+          <div class="stat-big">${streak.current}<small> day${streak.current === 1 ? "" : "s"}</small></div>
+          <div class="stat-note">${streakNote}</div>
+        </section>
+
+        <section class="card stat-tile ${r()}">
+          <span class="stat-emoji">⚡</span>
+          <div class="card-title">Level ${lvl.level} · ${lvl.title}</div>
+          <div class="stat-big">${lvl.xp.toLocaleString()}<small> XP</small></div>
+          <div class="bar"><div class="bar-fill" style="width:${lvl.percentage}%"></div></div>
+          <div class="stat-note">${(lvl.next - lvl.xp).toLocaleString()} XP to Level ${lvl.level + 1}<span class="hide-sm"> · subtopic +10, Easy +10, Medium +20, Hard +40</span></div>
+        </section>
+
+        <section class="card stat-tile ${r()}">
+          <span class="stat-emoji">✅</span>
+          <div class="card-title">Subtopics</div>
+          <div class="stat-big">${stats.checkedSubs}<small> / ${stats.totalSubs}</small></div>
+          <div class="bar"><div class="bar-fill" style="width:${stats.percentage}%"></div></div>
+          <div class="stat-note">${stats.completedDays} of 60 days fully complete</div>
+        </section>
+
+        <section class="card stat-tile ${r()}">
+          <span class="stat-emoji">🧩</span>
+          <div class="card-title">LeetCode problems</div>
+          <div class="stat-big">${solved}<small> / ${unique.length}</small></div>
+          <div class="mini-pills difficulty-counts">${difficultyBreakdownHTML(unique.map(u => u.problem))}</div>
+          <button class="link-btn" id="home-sets" style="align-self:flex-start">Open question sets →</button>
+        </section>
+
+        <section class="card activity-card ${r()}">
+          <div class="card-head">
+            <div class="card-title">📈 Your study activity</div>
+            <div class="activity-summary"><strong>${streak.activeDays}</strong> active day${streak.activeDays === 1 ? "" : "s"} · best streak <strong>${streak.best}</strong></div>
+          </div>
+          ${activityCalendarHTML(innerWidth < 640 ? 15 : 26)}
+          <div class="activity-legend">Less <span class="act-cell"></span><span class="act-cell l1"></span><span class="act-cell l2"></span><span class="act-cell l3"></span><span class="act-cell l4"></span> More</div>
+        </section>
+
+        <section class="card recall-card ${r()}">
+          <div class="card-title">🧠 ${recall.reviewed ? "Quick recall" : "Sneak peek"}</div>
+          <div class="recall-q">${recall.reviewed ? "Can you explain this out loud in 60 seconds?" : "Coming up today. What do you already know about it?"}</div>
+          <div class="recall-topic" id="recall-topic">${escapeHTML(recall.sub.label)}</div>
+          <div class="recall-day">Day ${recall.day.day} · ${escapeHTML(recall.day.title)}</div>
+          <div class="recall-actions">
+            <button class="btn small primary" id="recall-open" data-day="${recall.day.day}" data-id="${recall.sub.id}">${ICONS.bookOpen} Check the notes</button>
+            <button class="btn small" id="recall-next">${ICONS.shuffle} Another</button>
+          </div>
+        </section>
+
+        <section class="card journey-card ${r()}">
+          <div class="card-head">
+            <div class="card-title">🗺️ Your journey</div>
+            <button class="link-btn" id="home-roadmap">Full roadmap →</button>
+          </div>
+          <div class="journey">
+            ${phases.map(p => `
+              <button class="phase ${p.started ? "started" : ""} ${p.doneDays === p.days.length ? "done" : ""} ${p === currentPhase && !allDone ? "current" : ""}" data-day="${p.days[0]}" title="${escapeHTML(p.name)}">
+                <span class="phase-node">${p.doneDays === p.days.length ? "✓" : p.index}</span>
+                <span class="phase-name">${escapeHTML(p.shortName)}</span>
+                <span class="phase-range">${p.range}</span>
+                <span class="bar"><span class="bar-fill" style="display:block;width:${p.percentage}%"></span></span>
+              </button>`).join("")}
+          </div>
+        </section>
+
+        <section class="card mastery-card ${r()}">
+          <div class="card-title">🎓 Subject mastery</div>
+          <div class="mastery">
+            ${categories.map(c => {
+              const s = getCategoryStats(c.name);
+              const color = CATEGORY_COLORS[c.name]?.text || "#888";
+              return `
+                <div class="mastery-item">
+                  <div class="ring" style="--p:${s.percentage};--c:${color}"><span class="ring-value">${c.icon}</span></div>
+                  <div class="mastery-name">${c.name}</div>
+                  <div class="mastery-count">${s.percentage}% · ${s.checked}/${s.total}</div>
+                </div>`;
+            }).join("")}
+          </div>
+        </section>
+
+        <section class="card badges-card ${r()}">
+          <div class="card-head">
+            <div class="card-title">🏆 Badges ${achievements.filter(a => a.unlocked).length}/${achievements.length}</div>
+            <button class="link-btn" id="home-badges">See all →</button>
+          </div>
+          <div class="badge-row">${badgeStrip.map(a => badgeHTML(a, false)).join("")}</div>
+        </section>
+      </div>
+    `;
+
+    // Interactions
+    $("#mission-start").addEventListener("click", () => openDayDetail(currentDay));
+    $("#mission-notes").addEventListener("click", () => openDayDetail(currentDay, "study"));
+    $("#home-sets").addEventListener("click", () => openSet(null));
+    $("#home-roadmap").addEventListener("click", () => switchView("grid"));
+    $("#home-badges").addEventListener("click", () => switchView("backlog"));
+    container.querySelectorAll(".phase").forEach(btn =>
+      btn.addEventListener("click", () => openDayDetail(parseInt(btn.dataset.day))));
+
+    $("#quote-shuffle").addEventListener("click", () => {
+      quoteIndex = (quoteIndex + 1 + Math.floor(Math.random() * (QUOTES.length - 1))) % QUOTES.length;
+      $("#quote-text").textContent = QUOTES[quoteIndex][0];
+      $("#quote-author").textContent = `— ${QUOTES[quoteIndex][1]}`;
+    });
+
+    $("#recall-open").addEventListener("click", (e) => {
+      state.pendingNoteScroll = e.currentTarget.dataset.id;
+      openDayDetail(parseInt(e.currentTarget.dataset.day), "study");
+    });
+    $("#recall-next").addEventListener("click", () => {
+      const next = pickRecallItem();
+      $("#recall-topic").textContent = next.sub.label;
+      container.querySelector(".recall-day").textContent = `Day ${next.day.day} · ${next.day.title}`;
+      $("#recall-open").dataset.day = next.day.day;
+      $("#recall-open").dataset.id = next.sub.id;
+    });
+
+    // Click the name to personalise the greeting
+    $("#hero-name").addEventListener("click", (e) => {
+      const span = e.currentTarget;
+      const input = document.createElement("input");
+      input.className = "hero-name-input";
+      input.value = state.profileName;
+      input.placeholder = "Your name";
+      input.maxLength = 24;
+      span.replaceWith(input);
+      input.focus();
+      const commit = () => {
+        state.profileName = input.value.trim();
+        saveState();
+        renderHomeView();
+      };
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") input.blur();
+        if (ev.key === "Escape") { input.value = state.profileName; input.blur(); }
+      });
+    });
   }
 
   // ── Export / Import ──
@@ -1115,7 +1749,9 @@
       exportedAt: new Date().toISOString(),
       checkedSubtopics: state.checkedSubtopics,
       notes: state.notes,
-      solvedProblems: state.solvedProblems
+      solvedProblems: state.solvedProblems,
+      activity: state.activity,
+      profileName: state.profileName
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -1135,6 +1771,9 @@
         if (data.checkedSubtopics) state.checkedSubtopics = data.checkedSubtopics;
         if (data.notes) state.notes = data.notes;
         if (data.solvedProblems) state.solvedProblems = data.solvedProblems;
+        if (data.activity) state.activity = data.activity;
+        if (typeof data.profileName === "string") state.profileName = data.profileName;
+        state.seenAchievements = getAchievements().filter(a => a.unlocked).map(a => a.id);   // no confetti burst for imported badges
         saveState();
         renderAll();
         showToast("Progress imported successfully!", "success");
@@ -1149,9 +1788,10 @@
     state.checkedSubtopics = {};
     state.notes = {};
     state.solvedProblems = {};
+    state.activity = {};
+    state.seenAchievements = [];
     saveState();
-    closeDayDetail();
-    renderAll();
+    switchView("home");
     showToast("All progress has been reset.", "info");
   }
 
@@ -1159,6 +1799,7 @@
   function setTheme(theme) {
     state.theme = theme;
     document.documentElement.setAttribute("data-theme", theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#080a12" : "#f3f4fb");
     const toggle = $("#theme-toggle");
     toggle.innerHTML = theme === "dark" ? ICONS.sun : ICONS.moon;
     saveState();
@@ -1181,8 +1822,10 @@
       renderSubjectProgress();
     } else if (state.currentView === "sets") {
       renderSetsView();
-    } else {
+    } else if (state.currentView === "grid") {
       renderDaysGrid();
+    } else {
+      renderHomeView();
     }
   }
 
@@ -1190,10 +1833,60 @@
   function init() {
     loadState();
     setTheme(state.theme);
+    shufflePalette();   // a new colour mood on every visit
 
-    // Theme toggle
+    // Badges earned before this feature existed shouldn't all pop at once
+    if (state.seenAchievements === null) {
+      state.seenAchievements = getAchievements().filter(a => a.unlocked).map(a => a.id);
+      saveState();
+    }
+
+    // Theme toggle + palette shuffle
     $("#theme-toggle").addEventListener("click", () => {
       setTheme(state.theme === "dark" ? "light" : "dark");
+    });
+    $("#palette-shuffle").addEventListener("click", () => {
+      const p = shufflePalette();
+      showToast(`Palette: ${p.name}`, "info");
+    });
+
+    // Sidebar navigation
+    $$(".nav-item").forEach(item => {
+      item.addEventListener("click", () => {
+        if (item.dataset.view === "sets") openSet(null);
+        else switchView(item.dataset.view);
+      });
+    });
+
+    // Reading progress + back-to-top for long pages
+    const scroller = $(".content-scroll");
+    const toTop = document.createElement("button");
+    toTop.id = "to-top";
+    toTop.className = "to-top";
+    toTop.title = "Back to top";
+    toTop.innerHTML = ICONS.arrowUp;
+    toTop.addEventListener("click", () => scroller.scrollTo({ top: 0, behavior: "smooth" }));
+    document.body.appendChild(toTop);
+    scroller.addEventListener("scroll", () => {
+      toTop.classList.toggle("visible", scroller.scrollTop > 900);
+      const fill = $("#reading-progress-fill");
+      if (fill) {
+        const max = scroller.scrollHeight - scroller.clientHeight;
+        fill.style.width = `${max > 0 ? Math.min(100, (scroller.scrollTop / max) * 100) : 0}%`;
+      }
+    }, { passive: true });
+
+    // "/" focuses search, Escape clears it
+    document.addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName);
+      if (e.key === "/" && !typing) {
+        e.preventDefault();
+        $("#search-input").focus();
+      } else if (e.key === "Escape" && document.activeElement === $("#search-input")) {
+        $("#search-input").value = "";
+        $("#search-input").dispatchEvent(new Event("input"));
+        $("#search-input").blur();
+      }
     });
 
     // Search
@@ -1202,7 +1895,10 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
         state.searchQuery = e.target.value;
-        if (state.currentView === "grid") renderDaysGrid();
+        if (state.currentView === "home" || state.currentView === "backlog") {
+          if (state.searchQuery.trim()) switchView("grid");   // searching means browsing the roadmap
+        }
+        else if (state.currentView === "grid") renderDaysGrid();
         else if (state.currentView === "detail" && state.selectedDay) renderDayDetail(state.selectedDay);
         else if (state.currentView === "sets") {
           if (state.searchQuery.trim()) state.selectedSet = null;   // search runs across all sets
@@ -1227,21 +1923,6 @@
         if (state.currentView !== "grid") switchView("grid");
         else { renderDaysGrid(); renderSidebar(); }
       });
-    });
-
-    // View tabs
-    $$(".view-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        if (tab.dataset.view === "sets") openSet(null);
-        else switchView(tab.dataset.view);
-      });
-    });
-
-    // Sidebar shortcut to the question sets (the view tabs are hidden on phones)
-    $("#btn-sets").addEventListener("click", () => {
-      openSet(null);
-      $(".sidebar").classList.remove("open");
-      $("#mobile-overlay").classList.remove("active");
     });
 
     // Export

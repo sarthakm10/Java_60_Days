@@ -2,7 +2,8 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080a12">
   <meta name="description" content="60-Day SDE Interview Prep Tracker for Backend/Full-Stack Developers with 2-3 years of experience. Structured daily curriculum covering Java, Spring Boot, DSA, System Design, Databases, and DevOps.">
   <title>60-Day SDE Interview Prep Tracker | 2–3 YOE Edition</title>
   <link rel="stylesheet" href="styles.css">
@@ -10,147 +11,85 @@
 </head>
 <body>
 
+  <!-- Animated background: colours come from the palette picked on each visit -->
+  <div class="aurora" aria-hidden="true">
+    <span class="aurora-blob b1"></span>
+    <span class="aurora-blob b2"></span>
+    <span class="aurora-blob b3"></span>
+    <span class="aurora-grain"></span>
+  </div>
+  <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
   <!-- Mobile Overlay -->
   <div class="mobile-overlay" id="mobile-overlay"></div>
-
-  <!-- Theme Toggle -->
-  <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-  </button>
 
   <div class="app-container">
 
     <!-- ═══════ SIDEBAR ═══════ -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-brand">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+        </div>
+        <div>
           <h1>60-Day SDE Prep</h1>
-        </div>
-        <div class="sidebar-subtitle">2–3 YOE Edition</div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="quick-stats">
-        <div class="stat-card">
-          <div class="stat-label">Current Day</div>
-          <div class="stat-value accent" id="stat-current-day">1</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Streak 🔥</div>
-          <div class="stat-value green" id="stat-streak">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Days Done</div>
-          <div class="stat-value" id="stat-days-done">0/60</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Subtopics</div>
-          <div class="stat-value" id="stat-subs-done">0/0</div>
-        </div>
-        <div class="stat-card full-width">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="stat-label" style="margin-bottom:0">Overall Progress</span>
-            <span class="stat-value purple" style="font-size:1.1rem" id="stat-percentage">0%</span>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-          </div>
+          <div class="sidebar-subtitle">2–3 YOE Edition</div>
         </div>
       </div>
 
-      <!-- Status Filters -->
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Filter by Status</div>
-        <div class="filter-group">
-          <button class="filter-btn active" data-status="all">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            All Days
-            <span class="filter-badge">60</span>
-          </button>
-          <button class="filter-btn" data-status="completed">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Completed
-            <span class="filter-badge">0</span>
-          </button>
-          <button class="filter-btn" data-status="in-progress">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            In Progress
-            <span class="filter-badge">0</span>
-          </button>
-          <button class="filter-btn" data-status="pending">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-            Pending
-            <span class="filter-badge">0</span>
-          </button>
-          <button class="filter-btn" data-status="has-missed">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Has Missed Items
-            <span class="filter-badge">0</span>
-          </button>
+      <!-- Overall progress ring -->
+      <div class="sidebar-progress">
+        <div class="ring" id="sidebar-ring" style="--p:0">
+          <span class="ring-value" id="stat-percentage">0%</span>
+        </div>
+        <div class="sidebar-progress-text">
+          <div class="sidebar-progress-title">Overall progress</div>
+          <div class="sidebar-progress-line"><strong id="stat-days-done">0/60</strong> days</div>
+          <div class="sidebar-progress-line"><strong id="stat-subs-done">0/0</strong> subtopics</div>
         </div>
       </div>
 
-      <!-- Category Filters -->
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Filter by Category</div>
-        <div class="filter-group">
-          <button class="filter-btn active" data-category="all">
-            <span class="category-dot" style="background:#8b949e"></span>
-            All Categories
-          </button>
-          <button class="filter-btn" data-category="Java">
-            <span class="category-dot" style="background:#58a6ff"></span>
-            Java
-            <span class="filter-badge">0%</span>
-          </button>
-          <button class="filter-btn" data-category="Spring Boot">
-            <span class="category-dot" style="background:#3fb950"></span>
-            Spring Boot
-            <span class="filter-badge">0%</span>
-          </button>
-          <button class="filter-btn" data-category="DSA">
-            <span class="category-dot" style="background:#bc8cff"></span>
-            DSA
-            <span class="filter-badge">0%</span>
-          </button>
-          <button class="filter-btn" data-category="System Design">
-            <span class="category-dot" style="background:#f0883e"></span>
-            System Design
-            <span class="filter-badge">0%</span>
-          </button>
-          <button class="filter-btn" data-category="DB/DevOps">
-            <span class="category-dot" style="background:#f778ba"></span>
-            DB / DevOps
-            <span class="filter-badge">0%</span>
-          </button>
-        </div>
-      </div>
+      <!-- Navigation -->
+      <nav class="nav">
+        <button class="nav-item active" data-view="home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="grid">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+          <span>60-Day Roadmap</span>
+        </button>
+        <button class="nav-item" data-view="sets" id="btn-sets">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+          <span>Question Sets</span>
+        </button>
+        <button class="nav-item" data-view="backlog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          <span>Backlog &amp; Stats</span>
+        </button>
+      </nav>
 
       <!-- 60-Day Heatmap -->
       <div class="sidebar-section">
-        <div class="sidebar-section-title">60-Day Heatmap</div>
+        <div class="sidebar-section-title">Jump to a day</div>
         <div class="heatmap-grid" id="heatmap-grid"></div>
       </div>
 
       <!-- Actions -->
       <div class="sidebar-actions">
-        <button class="action-btn" id="btn-sets">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
-          DSA Question Sets
+        <button class="icon-btn" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle dark/light theme"></button>
+        <button class="icon-btn" id="palette-shuffle" title="New colour palette" aria-label="Shuffle colour palette">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
         </button>
-        <button class="action-btn" id="btn-export">
+        <button class="icon-btn" id="btn-export" title="Export progress (JSON)" aria-label="Export progress">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export Progress (JSON)
         </button>
-        <button class="action-btn" id="btn-import">
+        <button class="icon-btn" id="btn-import" title="Import progress" aria-label="Import progress">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import Progress
         </button>
         <input type="file" id="import-input" class="import-input" accept=".json">
-        <button class="action-btn danger" id="btn-reset">
+        <button class="icon-btn danger" id="btn-reset" title="Reset all progress" aria-label="Reset all progress">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Reset All Progress
         </button>
       </div>
     </aside>
@@ -165,51 +104,103 @@
 
         <div class="search-container">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" class="search-input" id="search-input" placeholder="Search topics, subtopics (e.g., HashMap, JWT, CompletableFuture)...">
+          <input type="text" class="search-input" id="search-input" placeholder="Search topics, subtopics, problems… (HashMap, JWT, Two Sum)">
+          <kbd class="search-kbd">/</kbd>
         </div>
 
-        <div class="view-tabs">
-          <button class="view-tab active" data-view="grid">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            Days
-          </button>
-          <button class="view-tab" data-view="backlog">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-            Backlog & Stats
-          </button>
-          <button class="view-tab" data-view="sets">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
-            Question Sets
-          </button>
+        <div class="top-chips">
+          <div class="chip streak-chip" id="chip-streak" title="Study streak: days in a row with progress">🔥 <strong>0</strong></div>
+          <div class="chip level-chip" id="chip-level" title="Your level">
+            <span class="level-badge">1</span>
+            <span class="level-title">Curious Coder</span>
+            <span class="level-bar"><span class="level-bar-fill" style="width:0%"></span></span>
+          </div>
         </div>
       </div>
 
       <!-- Content Scroll Area -->
       <div class="content-scroll">
-        <!-- Day Cards Grid View -->
-        <div class="days-grid" id="days-grid"></div>
+        <!-- Dashboard -->
+        <section class="view home-view active" id="home-view"></section>
+
+        <!-- Roadmap: filters + day cards -->
+        <section class="view roadmap-view" id="roadmap-view">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">The 60-Day Roadmap</h2>
+              <p class="view-subtitle">Eight phases from Core Java to the final sprint. Pick up where you left off, or jump anywhere.</p>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <div class="filter-group" role="group" aria-label="Filter by status">
+              <button class="filter-btn active" data-status="all">All <span class="filter-badge">60</span></button>
+              <button class="filter-btn" data-status="in-progress">In progress <span class="filter-badge">0</span></button>
+              <button class="filter-btn" data-status="pending">Not started <span class="filter-badge">0</span></button>
+              <button class="filter-btn" data-status="completed">Done <span class="filter-badge">0</span></button>
+              <button class="filter-btn" data-status="has-missed">Has missed items <span class="filter-badge">0</span></button>
+            </div>
+            <div class="filter-group" role="group" aria-label="Filter by category">
+              <button class="filter-btn active" data-category="all">All subjects</button>
+              <button class="filter-btn" data-category="Java"><span class="category-dot" style="background:#58a6ff"></span>Java <span class="filter-badge">0%</span></button>
+              <button class="filter-btn" data-category="Spring Boot"><span class="category-dot" style="background:#3fb950"></span>Spring Boot <span class="filter-badge">0%</span></button>
+              <button class="filter-btn" data-category="DSA"><span class="category-dot" style="background:#bc8cff"></span>DSA <span class="filter-badge">0%</span></button>
+              <button class="filter-btn" data-category="System Design"><span class="category-dot" style="background:#f0883e"></span>System Design <span class="filter-badge">0%</span></button>
+              <button class="filter-btn" data-category="DB/DevOps"><span class="category-dot" style="background:#f778ba"></span>DB / DevOps <span class="filter-badge">0%</span></button>
+            </div>
+          </div>
+
+          <div class="days-grid" id="days-grid"></div>
+        </section>
 
         <!-- Day Detail View -->
-        <div class="day-detail" id="day-detail"></div>
+        <section class="view day-detail" id="day-detail"></section>
 
         <!-- Backlog View -->
-        <div class="backlog-view" id="backlog-view">
+        <section class="view backlog-view" id="backlog-view">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Backlog &amp; Stats</h2>
+              <p class="view-subtitle">Where you stand in each subject, what you skipped, and every badge you can earn.</p>
+            </div>
+          </div>
           <div id="subject-progress" class="subject-progress"></div>
+          <div id="achievements-panel"></div>
           <div id="backlog-content"></div>
-        </div>
+        </section>
 
         <!-- DSA Question Sets View -->
-        <div class="sets-view" id="sets-view"></div>
+        <section class="view sets-view" id="sets-view"></section>
       </div>
     </main>
   </div>
+
+  <!-- Phone navigation (hidden on wider screens) -->
+  <nav class="bottom-nav" aria-label="Sections">
+    <button class="nav-item bottom-item active" data-view="home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item bottom-item" data-view="grid">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Roadmap</span>
+    </button>
+    <button class="nav-item bottom-item" data-view="sets">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+      <span>Problems</span>
+    </button>
+    <button class="nav-item bottom-item" data-view="backlog">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      <span>Stats</span>
+    </button>
+  </nav>
 
   <!-- Reset Confirmation Modal -->
   <div class="modal-overlay" id="reset-modal">
     <div class="modal-content">
       <h2 class="modal-title">⚠️ Reset All Progress?</h2>
       <p class="modal-description">
-        This will permanently delete all your checked subtopics, daily notes, and progress data.
+        This will permanently delete all your checked subtopics, solved problems, daily notes, streak history and badges.
         This action cannot be undone. Consider exporting your progress first.
       </p>
       <div class="modal-actions">
