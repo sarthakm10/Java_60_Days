@@ -9,7 +9,10 @@
   let state = {
     checkedSubtopics: {},     // { subtopicId: true }
     notes: {},                // { dayN_covered: "text", dayN_missed: "text" }
-    currentView: "grid",      // "grid" | "detail" | "backlog"
+    solvedProblems: {},       // { leetcodeSlug: true }
+    currentView: "grid",      // "grid" | "detail" | "backlog" | "sets"
+    selectedSet: null,        // question set id, or null for the sets index
+    setFilter: "all",         // "all" | "E" | "M" | "H" | "unsolved"
     selectedDay: null,         // day number
     statusFilter: "all",      // "all" | "completed" | "in-progress" | "pending" | "has-missed"
     categoryFilter: "all",    // "all" | category name
@@ -31,6 +34,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         checkedSubtopics: state.checkedSubtopics,
         notes: state.notes,
+        solvedProblems: state.solvedProblems,
         theme: state.theme
       }));
     } catch (e) { /* quota exceeded */ }
@@ -42,6 +46,7 @@
       if (saved) {
         state.checkedSubtopics = saved.checkedSubtopics || {};
         state.notes = saved.notes || {};
+        state.solvedProblems = saved.solvedProblems || {};
         state.theme = saved.theme || "dark";
       }
     } catch (e) { /* corrupted */ }
@@ -583,6 +588,22 @@
       </div>
     `;
 
+    const daySets = getSetsForDay(dayNum);
+    const practiceSetsHTML = daySets.length ? `
+      <div class="day-sets">
+        <div class="day-sets-title">🧩 Practice Question Sets for today's DSA</div>
+        <div class="day-sets-list">
+          ${daySets.map(s => {
+            const stats = getSetStats(s);
+            return `<button class="day-set-chip" data-set="${s.id}">
+              <span>${s.icon} ${s.name}</span>
+              <span class="day-set-count">${stats.solved}/${stats.total}</span>
+            </button>`;
+          }).join("")}
+        </div>
+      </div>
+    ` : "";
+
     const checklistHTML = `
       <div class="checklist-panel">
         <div class="checklist-section-header">
@@ -590,6 +611,7 @@
           <span class="checklist-section-count">${info.checked}/${info.total} done</span>
         </div>
         ${topicGroupsHTML}
+        ${practiceSetsHTML}
       </div>
       <div class="notes-panel">
         <div class="note-box">
@@ -685,6 +707,10 @@
         state.pendingNoteScroll = btn.dataset.id;
         renderDayDetail(dayNum);
       });
+    });
+
+    detail.querySelectorAll(".day-set-chip").forEach(chip => {
+      chip.addEventListener("click", () => openSet(chip.dataset.set));
     });
 
     // Checkbox events
@@ -817,6 +843,189 @@
     return div.innerHTML;
   }
 
+  // ── Question Sets ──
+  const DIFFICULTY = {
+    E: { label: "Easy", cls: "easy" },
+    M: { label: "Medium", cls: "medium" },
+    H: { label: "Hard", cls: "hard" }
+  };
+
+  function getSetById(id) {
+    return QUESTION_SETS.find(s => s.id === id);
+  }
+
+  function getSetsForDay(dayNum) {
+    return QUESTION_SETS.filter(s => s.days.includes(dayNum));
+  }
+
+  function getSetStats(set) {
+    const solved = set.problems.filter(p => state.solvedProblems[p[2]]).length;
+    const total = set.problems.length;
+    return { solved, total, percentage: total ? Math.round((solved / total) * 100) : 0 };
+  }
+
+  // Problems can appear in several sets; dedupe by slug for overall numbers
+  function getUniqueProblems() {
+    const bySlug = new Map();
+    QUESTION_SETS.forEach(set => set.problems.forEach(p => {
+      if (!bySlug.has(p[2])) bySlug.set(p[2], { problem: p, sets: [] });
+      bySlug.get(p[2]).sets.push(set);
+    }));
+    return [...bySlug.values()];
+  }
+
+  function problemRowHTML(p, sets) {
+    const [num, title, slug, diff, premium] = p;
+    const solved = !!state.solvedProblems[slug];
+    const d = DIFFICULTY[diff];
+    const setLinks = sets
+      ? `<span class="problem-sets">${sets.map(s => `<button class="problem-set-link" data-set="${s.id}">${s.name}</button>`).join("")}</span>`
+      : "";
+    return `
+      <div class="problem-row ${solved ? "solved" : ""}">
+        <input type="checkbox" class="subtopic-checkbox problem-checkbox" data-slug="${slug}" ${solved ? "checked" : ""} title="Mark as solved">
+        <span class="problem-num">${num}</span>
+        <a class="problem-title" href="https://leetcode.com/problems/${slug}/" target="_blank" rel="noopener noreferrer">${escapeHTML(title)}</a>
+        ${premium ? `<span class="problem-premium" title="Needs LeetCode Premium">🔒 Premium</span>` : ""}
+        ${setLinks}
+        <span class="difficulty-pill ${d.cls}">${d.label}</span>
+      </div>
+    `;
+  }
+
+  function difficultyBreakdownHTML(problems) {
+    return ["E", "M", "H"].map(key => {
+      const all = problems.filter(p => p[3] === key);
+      const solved = all.filter(p => state.solvedProblems[p[2]]).length;
+      return `<span class="difficulty-count ${DIFFICULTY[key].cls}">${DIFFICULTY[key].label} ${solved}/${all.length}</span>`;
+    }).join("");
+  }
+
+  function renderSetsView() {
+    const container = $("#sets-view");
+    const set = state.selectedSet && getSetById(state.selectedSet);
+    container.innerHTML = set ? setDetailHTML(set) : setsIndexHTML();
+
+    container.querySelectorAll(".set-card, .problem-set-link").forEach(el => {
+      el.addEventListener("click", () => openSet(el.dataset.set));
+    });
+    container.querySelector("#sets-back")?.addEventListener("click", () => openSet(null));
+    container.querySelectorAll(".set-day-link").forEach(el => {
+      el.addEventListener("click", () => openDayDetail(parseInt(el.dataset.day)));
+    });
+    container.querySelectorAll(".set-filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.setFilter = btn.dataset.filter;
+        renderSetsView();
+      });
+    });
+    container.querySelectorAll(".problem-checkbox").forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (cb.checked) state.solvedProblems[cb.dataset.slug] = true;
+        else delete state.solvedProblems[cb.dataset.slug];
+        saveState();
+        const scroller = $(".content-scroll");
+        const top = scroller.scrollTop;
+        renderSetsView();
+        scroller.scrollTop = top;
+      });
+    });
+  }
+
+  function setsIndexHTML() {
+    const unique = getUniqueProblems();
+    const solvedCount = unique.filter(u => state.solvedProblems[u.problem[2]]).length;
+    const query = state.searchQuery.trim().toLowerCase();
+
+    let body;
+    if (query) {
+      const matches = unique.filter(u =>
+        u.problem[1].toLowerCase().includes(query) || String(u.problem[0]) === query
+      );
+      body = `
+        <div class="backlog-section-title">Search results for "${escapeHTML(state.searchQuery.trim())}" (${matches.length})</div>
+        <div class="problem-list">
+          ${matches.length
+            ? matches.map(u => problemRowHTML(u.problem, u.sets)).join("")
+            : `<div class="backlog-empty"><p>No problems match. Try a title or a LeetCode number.</p></div>`}
+        </div>
+      `;
+    } else {
+      body = `<div class="sets-grid">${QUESTION_SETS.map(s => {
+        const stats = getSetStats(s);
+        return `
+          <button class="set-card ${stats.solved === stats.total ? "complete" : ""}" data-set="${s.id}">
+            <div class="set-card-header">
+              <span class="set-icon">${s.icon}</span>
+              <span class="set-name">${s.name}</span>
+              <span class="set-count">${stats.solved}/${stats.total}</span>
+            </div>
+            <p class="set-description">${s.description}</p>
+            <div class="set-progress-bar"><div class="set-progress-fill" style="width:${stats.percentage}%"></div></div>
+            <div class="set-days">Days ${s.days.join(" · ")}</div>
+          </button>
+        `;
+      }).join("")}</div>`;
+    }
+
+    return `
+      <div class="sets-header">
+        <div>
+          <h2 class="sets-title">🧩 DSA Question Sets</h2>
+          <p class="sets-subtitle">${QUESTION_SETS.length} topic sets · ${unique.length} LeetCode problems · tick a problem once and it counts in every set it appears in.</p>
+        </div>
+        <div class="sets-summary">
+          <div class="sets-summary-value">${solvedCount}<span>/${unique.length}</span></div>
+          <div class="sets-summary-label">solved</div>
+          <div class="difficulty-counts">${difficultyBreakdownHTML(unique.map(u => u.problem))}</div>
+        </div>
+      </div>
+      ${body}
+    `;
+  }
+
+  function setDetailHTML(set) {
+    const stats = getSetStats(set);
+    const filters = [["all", "All"], ["E", "Easy"], ["M", "Medium"], ["H", "Hard"], ["unsolved", "Unsolved"]];
+    const visible = set.problems.filter(p => {
+      if (state.setFilter === "all") return true;
+      if (state.setFilter === "unsolved") return !state.solvedProblems[p[2]];
+      return p[3] === state.setFilter;
+    });
+
+    return `
+      <button class="detail-back-btn" id="sets-back">${ICONS.arrowLeft} All Question Sets</button>
+      <div class="set-detail-header">
+        <div class="set-detail-title"><span class="set-icon">${set.icon}</span> ${set.name}</div>
+        <p class="set-description">${set.description}</p>
+        <div class="set-detail-meta">
+          <span class="set-count">${stats.solved}/${stats.total} solved</span>
+          <div class="difficulty-counts">${difficultyBreakdownHTML(set.problems)}</div>
+        </div>
+        <div class="set-progress-bar"><div class="set-progress-fill" style="width:${stats.percentage}%"></div></div>
+        <div class="set-day-links">
+          <span>Practised on:</span>
+          ${set.days.map(d => `<button class="set-day-link" data-day="${d}">Day ${d}</button>`).join("")}
+        </div>
+      </div>
+      <div class="set-filters">
+        ${filters.map(([key, label]) => `<button class="set-filter-btn ${state.setFilter === key ? "active" : ""}" data-filter="${key}">${label}</button>`).join("")}
+      </div>
+      <div class="problem-list">
+        ${visible.length
+          ? visible.map(p => problemRowHTML(p)).join("")
+          : `<div class="backlog-empty"><p>Nothing here — every problem in this filter is solved. 🎉</p></div>`}
+      </div>
+    `;
+  }
+
+  function openSet(setId) {
+    state.selectedSet = setId || null;
+    state.setFilter = "all";
+    switchView("sets");
+    $(".content-scroll").scrollTop = 0;
+  }
+
   // ── Render: Subject Progress ──
   function renderSubjectProgress() {
     const container = $("#subject-progress");
@@ -856,6 +1065,8 @@
     state.detailTab = "checklist";
     $("#days-grid").style.display = "none";
     $("#backlog-view").classList.remove("active");
+    $("#sets-view").classList.remove("active");
+    $$(".view-tab").forEach(t => t.classList.remove("active"));
     const detail = $("#day-detail");
     detail.classList.add("active");
     renderDayDetail(dayNum);
@@ -868,7 +1079,9 @@
     state.currentView = "grid";
     $("#day-detail").classList.remove("active");
     $("#backlog-view").classList.remove("active");
+    $("#sets-view").classList.remove("active");
     $("#days-grid").style.display = "grid";
+    $$(".view-tab").forEach(t => t.classList.toggle("active", t.dataset.view === "grid"));
     renderDaysGrid();
     renderSidebar();
   }
@@ -877,17 +1090,18 @@
     state.currentView = view;
     $$(".view-tab").forEach(t => t.classList.toggle("active", t.dataset.view === view));
 
+    $("#days-grid").style.display = view === "grid" ? "grid" : "none";
+    $("#day-detail").classList.remove("active");
+    $("#backlog-view").classList.toggle("active", view === "backlog");
+    $("#sets-view").classList.toggle("active", view === "sets");
+
     if (view === "grid") {
-      $("#days-grid").style.display = "grid";
-      $("#day-detail").classList.remove("active");
-      $("#backlog-view").classList.remove("active");
       renderDaysGrid();
     } else if (view === "backlog") {
-      $("#days-grid").style.display = "none";
-      $("#day-detail").classList.remove("active");
-      $("#backlog-view").classList.add("active");
       renderBacklogView();
       renderSubjectProgress();
+    } else if (view === "sets") {
+      renderSetsView();
     }
     renderSidebar();
   }
@@ -898,7 +1112,8 @@
       version: 2,
       exportedAt: new Date().toISOString(),
       checkedSubtopics: state.checkedSubtopics,
-      notes: state.notes
+      notes: state.notes,
+      solvedProblems: state.solvedProblems
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -917,6 +1132,7 @@
         const data = JSON.parse(e.target.result);
         if (data.checkedSubtopics) state.checkedSubtopics = data.checkedSubtopics;
         if (data.notes) state.notes = data.notes;
+        if (data.solvedProblems) state.solvedProblems = data.solvedProblems;
         saveState();
         renderAll();
         showToast("Progress imported successfully!", "success");
@@ -930,6 +1146,7 @@
   function resetProgress() {
     state.checkedSubtopics = {};
     state.notes = {};
+    state.solvedProblems = {};
     saveState();
     closeDayDetail();
     renderAll();
@@ -960,6 +1177,8 @@
     } else if (state.currentView === "backlog") {
       renderBacklogView();
       renderSubjectProgress();
+    } else if (state.currentView === "sets") {
+      renderSetsView();
     } else {
       renderDaysGrid();
     }
@@ -983,6 +1202,10 @@
         state.searchQuery = e.target.value;
         if (state.currentView === "grid") renderDaysGrid();
         else if (state.currentView === "detail" && state.selectedDay) renderDayDetail(state.selectedDay);
+        else if (state.currentView === "sets") {
+          if (state.searchQuery.trim()) state.selectedSet = null;   // search runs across all sets
+          renderSetsView();
+        }
       }, 300);
     });
 
@@ -1006,7 +1229,17 @@
 
     // View tabs
     $$(".view-tab").forEach(tab => {
-      tab.addEventListener("click", () => switchView(tab.dataset.view));
+      tab.addEventListener("click", () => {
+        if (tab.dataset.view === "sets") openSet(null);
+        else switchView(tab.dataset.view);
+      });
+    });
+
+    // Sidebar shortcut to the question sets (the view tabs are hidden on phones)
+    $("#btn-sets").addEventListener("click", () => {
+      openSet(null);
+      $(".sidebar").classList.remove("open");
+      $("#mobile-overlay").classList.remove("active");
     });
 
     // Export

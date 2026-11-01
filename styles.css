@@ -1979,6 +1979,400 @@ body {
   }
 }
 
+/* ── DSA Question Sets ── */
+.sets-view {
+  display: none;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+.sets-view.active {
+  display: block;
+}
+
+.sets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.sets-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.sets-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.sets-summary {
+  text-align: right;
+}
+
+.sets-summary-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent-green);
+  line-height: 1;
+}
+
+.sets-summary-value span {
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.sets-summary-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin: 2px 0 8px;
+}
+
+.difficulty-counts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sets-summary .difficulty-counts {
+  justify-content: flex-end;
+}
+
+.difficulty-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.easy { color: var(--accent-green); background: var(--accent-green-bg); }
+.medium { color: var(--accent-yellow); background: var(--accent-yellow-bg); }
+.hard { color: var(--accent-red); background: var(--accent-red-bg); }
+
+.sets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  text-align: left;
+  font-family: inherit;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.set-card:hover {
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-glow-blue);
+  transform: translateY(-2px);
+}
+
+.set-card.complete {
+  border-color: var(--accent-green);
+}
+
+.set-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.set-icon {
+  font-size: 1.3rem;
+}
+
+.set-name {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.set-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.set-description {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.set-progress-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.set-progress-fill {
+  height: 100%;
+  background: var(--gradient-success);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+}
+
+.set-days {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.set-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  margin-bottom: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+
+.set-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.set-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.set-day-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.set-day-link,
+.set-filter-btn,
+.problem-set-link {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.set-day-link {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+}
+
+.set-day-link:hover,
+.set-filter-btn:hover,
+.problem-set-link:hover {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.set-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.set-filter-btn {
+  font-size: 0.8rem;
+  padding: 5px 14px;
+}
+
+.set-filter-btn.active {
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.problem-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border-secondary);
+  transition: background var(--transition-fast);
+}
+
+.problem-row:last-child {
+  border-bottom: none;
+}
+
+.problem-row:hover {
+  background: var(--bg-hover);
+}
+
+.problem-row .subtopic-checkbox {
+  margin-top: 0;
+}
+
+.problem-num {
+  min-width: 42px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.problem-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.problem-title:hover {
+  color: var(--accent-blue);
+  text-decoration: underline;
+}
+
+.problem-row.solved .problem-title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.problem-premium {
+  font-size: 0.68rem;
+  color: var(--accent-amber);
+  white-space: nowrap;
+}
+
+.problem-sets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.problem-set-link {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+}
+
+.difficulty-pill {
+  min-width: 62px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+/* Day detail → practice sets */
+.day-sets {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+}
+
+.day-sets-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.day-sets-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.day-set-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.day-set-chip:hover {
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
+
+.day-set-count {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 768px) {
+  .sets-summary {
+    text-align: left;
+  }
+
+  .sets-summary .difficulty-counts {
+    justify-content: flex-start;
+  }
+
+  .problem-row {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .problem-num {
+    min-width: 30px;
+  }
+
+  .difficulty-pill {
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  /* keep checkbox · number · title · difficulty on one line; extras wrap below */
+  .problem-premium,
+  .problem-sets {
+    order: 5;
+    flex-basis: 100%;
+    padding-left: 58px;
+    justify-content: flex-start;
+  }
+}
+
 /* ── Loading Skeleton ── */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-tertiary) 0%, var(--bg-hover) 50%, var(--bg-tertiary) 100%);
