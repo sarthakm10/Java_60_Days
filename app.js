@@ -21,7 +21,7 @@
     selectedDay: null,         // day number
     statusFilter: "all",      // "all" | "completed" | "in-progress" | "pending" | "has-missed"
     categoryFilter: "all",    // "all" | category name
-    searchQuery: "",
+    highlight: null,          // subtopic id or problem slug picked from search, highlighted on its page
     theme: "dark",
     detailTab: "checklist",   // "checklist" | "study"
     pendingNoteScroll: null   // subtopic id to scroll to after the study tab renders
@@ -295,18 +295,6 @@
     // Category filter
     if (state.categoryFilter !== "all") {
       days = days.filter(d => d.categories.includes(state.categoryFilter));
-    }
-
-    // Search
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.toLowerCase();
-      days = days.filter(d => {
-        if (d.title.toLowerCase().includes(q)) return true;
-        return d.topics.some(t =>
-          t.name.toLowerCase().includes(q) ||
-          t.subtopics.some(s => s.label.toLowerCase().includes(q))
-        );
-      });
     }
 
     return days;
@@ -867,9 +855,9 @@
 
       const subtopicsHTML = topic.subtopics.map(sub => {
         const isChecked = !!state.checkedSubtopics[sub.id];
-        const isHighlighted = state.searchQuery && sub.label.toLowerCase().includes(state.searchQuery.toLowerCase());
+        const isHighlighted = isSearchHighlight(sub.id);
         return `
-          <div class="subtopic-item ${isChecked ? 'checked' : ''} ${isHighlighted ? 'search-highlight' : ''}">
+          <div class="subtopic-item ${isChecked ? 'checked' : ''} ${isHighlighted ? 'search-highlight' : ''}" data-id="${sub.id}">
             <input type="checkbox" class="subtopic-checkbox" data-id="${sub.id}" ${isChecked ? 'checked' : ''}>
             <label class="subtopic-label" data-id="${sub.id}">${escapeHTML(sub.label)}</label>
             ${noteIds.has(sub.id) ? `<button class="subtopic-notes-btn" data-id="${sub.id}" title="Read study notes for this subtopic">${ICONS.bookOpen}</button>` : ""}
@@ -1220,7 +1208,7 @@
       ? `<span class="problem-sets">${sets.map(s => `<button class="problem-set-link" data-set="${s.id}">${s.name}</button>`).join("")}</span>`
       : "";
     return `
-      <div class="problem-row ${solved ? "solved" : ""}">
+      <div class="problem-row ${solved ? "solved" : ""} ${isSearchHighlight(slug) ? "search-highlight" : ""}" data-slug="${slug}">
         <input type="checkbox" class="subtopic-checkbox problem-checkbox" data-slug="${slug}" ${solved ? "checked" : ""} title="Mark as solved">
         <span class="problem-num">${num}</span>
         <a class="problem-title" href="https://leetcode.com/problems/${slug}/" target="_blank" rel="noopener noreferrer">${escapeHTML(title)}</a>
@@ -1280,40 +1268,24 @@
   function setsIndexHTML() {
     const unique = getUniqueProblems();
     const solvedCount = unique.filter(u => state.solvedProblems[u.problem[2]]).length;
-    const query = state.searchQuery.trim().toLowerCase();
 
-    let body;
-    if (query) {
-      const matches = unique.filter(u =>
-        u.problem[1].toLowerCase().includes(query) || String(u.problem[0]) === query
-      );
-      body = `
-        <div class="backlog-section-title">Search results for "${escapeHTML(state.searchQuery.trim())}" (${matches.length})</div>
-        <div class="problem-list">
-          ${matches.length
-            ? matches.map(u => problemRowHTML(u.problem, u.sets)).join("")
-            : `<div class="backlog-empty"><p>No problems match. Try a title or a LeetCode number.</p></div>`}
-        </div>
+    // Show sets in the order the 60-day plan reaches them
+    const byFirstDay = [...QUESTION_SETS].sort((a, b) => Math.min(...a.days) - Math.min(...b.days));
+    const body = `<div class="sets-grid">${byFirstDay.map(s => {
+      const stats = getSetStats(s);
+      return `
+        <button class="set-card ${stats.solved === stats.total ? "complete" : ""}" data-set="${s.id}">
+          <div class="set-card-header">
+            <span class="set-icon">${s.icon}</span>
+            <span class="set-name">${s.name}</span>
+            <span class="set-count">${stats.solved}/${stats.total}</span>
+          </div>
+          <p class="set-description">${s.description}</p>
+          <div class="set-progress-bar"><div class="set-progress-fill" style="width:${stats.percentage}%"></div></div>
+          <div class="set-days">Days ${s.days.join(" · ")}</div>
+        </button>
       `;
-    } else {
-      // Show sets in the order the 60-day plan reaches them
-      const byFirstDay = [...QUESTION_SETS].sort((a, b) => Math.min(...a.days) - Math.min(...b.days));
-      body = `<div class="sets-grid">${byFirstDay.map(s => {
-        const stats = getSetStats(s);
-        return `
-          <button class="set-card ${stats.solved === stats.total ? "complete" : ""}" data-set="${s.id}">
-            <div class="set-card-header">
-              <span class="set-icon">${s.icon}</span>
-              <span class="set-name">${s.name}</span>
-              <span class="set-count">${stats.solved}/${stats.total}</span>
-            </div>
-            <p class="set-description">${s.description}</p>
-            <div class="set-progress-bar"><div class="set-progress-fill" style="width:${stats.percentage}%"></div></div>
-            <div class="set-days">Days ${s.days.join(" · ")}</div>
-          </button>
-        `;
-      }).join("")}</div>`;
-    }
+    }).join("")}</div>`;
 
     return `
       <div class="sets-header">
@@ -1486,27 +1458,47 @@
     return { day: today, sub: subs[Math.floor(Math.random() * subs.length)], reviewed: false };
   }
 
-  function activityCalendarHTML(weeks = 26) {
+  // Month calendars: last month, this month and the next two (e.g. 1 Oct → 31 Jan on 1 Nov)
+  function activityCalendarHTML(monthsBefore = 1, monthsAfter = 2) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(today);
-    start.setDate(start.getDate() - (weeks - 1) * 7 - ((today.getDay() + 6) % 7));   // Monday, `weeks` weeks ago
     const max = Math.max(1, ...Object.values(state.activity));
-    let cells = "";
-    const d = new Date(start);
-    for (let n = 0; n < weeks * 7; n++, d.setDate(d.getDate() + 1)) {
-      const count = state.activity[dateKey(d)] || 0;
-      const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / max) * 4));
-      const isToday = d.getTime() === today.getTime();
-      const label = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-      cells += `<span class="act-cell ${level ? "l" + level : ""} ${isToday ? "today" : ""} ${d > today ? "future" : ""}" title="${label}: ${count} item${count === 1 ? "" : "s"}"></span>`;
+
+    const months = [];
+    for (let offset = -monthsBefore; offset <= monthsAfter; offset++) {
+      const first = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+      const leadingBlanks = (first.getDay() + 6) % 7;   // weeks start on Monday
+      let cells = `<span class="cal-cell blank"></span>`.repeat(leadingBlanks);
+      let total = 0, activeDays = 0;
+
+      for (let date = 1; date <= daysInMonth; date++) {
+        const d = new Date(first.getFullYear(), first.getMonth(), date);
+        const count = state.activity[dateKey(d)] || 0;
+        total += count;
+        if (count) activeDays++;
+        const level = count === 0 ? 0 : Math.min(4, Math.ceil((count / max) * 4));
+        const when = d.getTime() === today.getTime() ? "today" : d > today ? "future" : "past";
+        const label = d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+        const tip = when === "future" ? label : `${label}: ${count} item${count === 1 ? "" : "s"}`;
+        cells += `<span class="cal-cell ${when} ${level ? "l" + level : ""}" title="${tip}">${date}</span>`;
+      }
+
+      const isCurrent = offset === 0;
+      months.push(`
+        <div class="cal-month ${isCurrent ? "current" : ""}">
+          <div class="cal-month-head">
+            <span class="cal-month-name">${first.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</span>
+            <span class="cal-month-total">${first > today ? "upcoming" : `${activeDays} day${activeDays === 1 ? "" : "s"} · ${total}`}</span>
+          </div>
+          <div class="cal-grid">
+            ${["M", "T", "W", "T", "F", "S", "S"].map(w => `<span class="cal-weekday">${w}</span>`).join("")}
+            ${cells}
+          </div>
+        </div>
+      `);
     }
-    return `
-      <div class="activity-wrap">
-        <div class="activity-days"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-        <div class="activity-grid">${cells}</div>
-      </div>
-    `;
+    return `<div class="cal-months">${months.join("")}</div>`;
   }
 
   function renderHomeView() {
@@ -1635,8 +1627,8 @@
             <div class="card-title">📈 Your study activity</div>
             <div class="activity-summary"><strong>${streak.activeDays}</strong> active day${streak.activeDays === 1 ? "" : "s"} · best streak <strong>${streak.best}</strong></div>
           </div>
-          ${activityCalendarHTML(innerWidth < 640 ? 15 : 26)}
-          <div class="activity-legend">Less <span class="act-cell"></span><span class="act-cell l1"></span><span class="act-cell l2"></span><span class="act-cell l3"></span><span class="act-cell l4"></span> More</div>
+          ${activityCalendarHTML()}
+          <div class="activity-legend">Less <span class="act-cell"></span><span class="act-cell l1"></span><span class="act-cell l2"></span><span class="act-cell l3"></span><span class="act-cell l4"></span> More <span class="legend-today">today</span></div>
         </section>
 
         <section class="card recall-card ${r()}">
@@ -1829,6 +1821,212 @@
     }
   }
 
+  // ── Global search (results dropdown, same on every page) ──
+  let searchIndex = null;
+
+  function buildSearchIndex() {
+    const entries = [];
+    CURRICULUM_DATA.forEach(d => {
+      entries.push({ type: "day", day: d.day, title: `Day ${d.day} · ${d.title}`, meta: d.phase, text: `day ${d.day} ${d.title} ${d.phase}` });
+      d.topics.forEach(t => t.subtopics.forEach(s => {
+        entries.push({ type: "subtopic", day: d.day, id: s.id, title: s.label, meta: `Day ${d.day} · ${t.name}`, text: `${s.label} ${t.name}` });
+      }));
+    });
+    getUniqueProblems().forEach(({ problem, sets }) => {
+      const [num, title, slug, diff] = problem;
+      entries.push({ type: "problem", slug, num: String(num), setId: sets[0].id, diff, title: `${num}. ${title}`,
+        meta: sets.map(s => s.name).join(" · "), text: `${num} ${title} leetcode` });
+    });
+    QUESTION_SETS.forEach(s => {
+      entries.push({ type: "set", setId: s.id, title: `${s.icon} ${s.name}`, meta: `${s.problems.length} problems · Days ${s.days.join(", ")}`, text: `${s.name} ${s.description}` });
+    });
+    entries.forEach(e => { e.lower = e.text.toLowerCase(); e.titleLower = e.title.toLowerCase(); });
+    return entries;
+  }
+
+  const SEARCH_GROUPS = [
+    { type: "day", label: "Days", limit: 4 },
+    { type: "subtopic", label: "Topics", limit: 7 },
+    { type: "problem", label: "LeetCode problems", limit: 6 },
+    { type: "set", label: "Question sets", limit: 3 }
+  ];
+
+  function runSearch(query) {
+    searchIndex = searchIndex || buildSearchIndex();
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const words = q.split(/\s+/);
+    const dayMatch = q.match(/^(?:day\s*)?(\d{1,2})$/);
+
+    const scored = [];
+    searchIndex.forEach(e => {
+      let score;
+      if (dayMatch && e.type === "day" && e.day === +dayMatch[1]) score = 100;          // "12" or "day 12"
+      else if (/^\d+$/.test(q) && e.type === "problem" && e.num === q) score = 95;       // LeetCode number
+      else if (!words.every(w => e.lower.includes(w))) return;
+      else if (e.titleLower.startsWith(q)) score = 80;
+      else if (e.titleLower.includes(q)) score = 60;
+      else if (words.every(w => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(e.lower))) score = 40;
+      else score = 20;
+      scored.push({ ...e, score });
+    });
+
+    return SEARCH_GROUPS.map(g => ({
+      ...g,
+      items: scored.filter(e => e.type === g.type).sort((a, b) => b.score - a.score).slice(0, g.limit)
+    })).filter(g => g.items.length);
+  }
+
+  function highlightMatch(text, query) {
+    const safe = escapeHTML(text);
+    const words = query.trim().split(/\s+/).filter(w => w.length > 1).map(w => escapeHTML(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    if (!words.length) return safe;
+    return safe.replace(new RegExp(`(${words.join("|")})`, "gi"), "<mark>$1</mark>");
+  }
+
+  function searchItemHTML(item, query, index) {
+    const done = item.type === "subtopic" ? state.checkedSubtopics[item.id]
+      : item.type === "problem" ? state.solvedProblems[item.slug]
+      : item.type === "day" ? isDayCompleted(item.day) : false;
+    const icon = { day: "📅", subtopic: "📘", problem: "🧩", set: "🗂️" }[item.type];
+    const pill = item.type === "problem" ? `<span class="difficulty-pill ${DIFFICULTY[item.diff].cls}">${DIFFICULTY[item.diff].label}</span>` : "";
+    return `
+      <div class="search-item" role="option" id="search-opt-${index}" data-index="${index}">
+        <span class="search-item-icon">${icon}</span>
+        <span class="search-item-body">
+          <span class="search-item-title">${highlightMatch(item.title, query)}</span>
+          <span class="search-item-meta">${escapeHTML(item.meta)}</span>
+        </span>
+        ${done ? `<span class="search-item-done" title="Done">✓</span>` : ""}
+        ${pill}
+        ${item.type === "problem" ? `<a class="search-item-ext" href="https://leetcode.com/problems/${item.slug}/" target="_blank" rel="noopener noreferrer" title="Open on LeetCode">↗</a>` : ""}
+      </div>
+    `;
+  }
+
+  // Open whatever the result points at, then highlight it on its page
+  function openSearchResult(item) {
+    highlightUntil = Date.now() + 6000;
+    if (item.type === "day") {
+      state.highlight = null;
+      openDayDetail(item.day);
+    } else if (item.type === "subtopic") {
+      state.highlight = item.id;
+      openDayDetail(item.day);
+      const row = $(`.subtopic-item[data-id="${item.id}"]`);
+      row?.scrollIntoView({ block: "center" });
+    } else if (item.type === "problem") {
+      state.highlight = item.slug;
+      openSet(item.setId);
+      $(`.problem-row[data-slug="${item.slug}"]`)?.scrollIntoView({ block: "center" });
+    } else if (item.type === "set") {
+      state.highlight = null;
+      openSet(item.setId);
+    }
+  }
+
+  // A picked result stays highlighted for a few seconds (long enough to survive the re-render when notes finish loading)
+  let highlightUntil = 0;
+  function isSearchHighlight(key) {
+    return state.highlight === key && Date.now() < highlightUntil;
+  }
+
+  function initSearch() {
+    const input = $("#search-input");
+    const panel = $("#search-results");
+    let results = [];       // flat list in display order
+    let active = 0;
+    let timer;
+
+    const close = () => {
+      panel.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+    };
+
+    const setActive = (i) => {
+      const options = panel.querySelectorAll(".search-item");
+      if (!options.length) return;
+      active = (i + options.length) % options.length;
+      options.forEach((o, k) => o.classList.toggle("active", k === active));
+      options[active].scrollIntoView({ block: "nearest" });
+      input.setAttribute("aria-activedescendant", options[active].id);
+    };
+
+    const render = () => {
+      const query = input.value;
+      if (!query.trim()) { close(); results = []; return; }
+      const groups = runSearch(query);
+      results = groups.flatMap(g => g.items);
+      let n = 0;
+      panel.innerHTML = groups.length
+        ? groups.map(g => `
+            <div class="search-group">
+              <div class="search-group-label">${g.label}</div>
+              ${g.items.map(item => searchItemHTML(item, query, n++)).join("")}
+            </div>`).join("") + `<div class="search-footer"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>Esc</kbd> close</span></div>`
+        : `<div class="search-empty">No matches for “${escapeHTML(query.trim())}”.<br>Try a topic (HashMap, JWT), a problem (Two Sum, 146) or “day 12”.</div>`;
+      panel.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      setActive(0);
+    };
+
+    const choose = (i) => {
+      const item = results[i];
+      if (!item) return;
+      input.value = "";
+      close();
+      input.blur();
+      openSearchResult(item);
+    };
+
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(render, 120);
+    });
+    input.addEventListener("focus", () => { if (input.value.trim()) render(); });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (panel.hidden) render(); else setActive(active + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        clearTimeout(timer);
+        if (panel.hidden || !results.length) render();
+        if (results.length) choose(active);
+      } else if (e.key === "Escape") {
+        input.value = "";
+        close();
+        input.blur();
+      }
+    });
+
+    // mousedown (not click) so the input doesn't blur first; let the LeetCode ↗ link through
+    panel.addEventListener("mousedown", (e) => {
+      if (e.target.closest(".search-item-ext")) return;
+      const option = e.target.closest(".search-item");
+      if (!option) return;
+      e.preventDefault();
+      choose(+option.dataset.index);
+    });
+    panel.addEventListener("mousemove", (e) => {
+      const option = e.target.closest(".search-item");
+      if (option && +option.dataset.index !== active) setActive(+option.dataset.index);
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (!e.target.closest(".search-container")) close();
+    });
+
+    // "/" focuses search from anywhere
+    document.addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName);
+      if (e.key === "/" && !typing) {
+        e.preventDefault();
+        input.focus();
+      }
+    });
+  }
+
   // ── Init ──
   function init() {
     loadState();
@@ -1876,36 +2074,7 @@
       }
     }, { passive: true });
 
-    // "/" focuses search, Escape clears it
-    document.addEventListener("keydown", (e) => {
-      const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName);
-      if (e.key === "/" && !typing) {
-        e.preventDefault();
-        $("#search-input").focus();
-      } else if (e.key === "Escape" && document.activeElement === $("#search-input")) {
-        $("#search-input").value = "";
-        $("#search-input").dispatchEvent(new Event("input"));
-        $("#search-input").blur();
-      }
-    });
-
-    // Search
-    let searchTimer;
-    $("#search-input").addEventListener("input", (e) => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        state.searchQuery = e.target.value;
-        if (state.currentView === "home" || state.currentView === "backlog") {
-          if (state.searchQuery.trim()) switchView("grid");   // searching means browsing the roadmap
-        }
-        else if (state.currentView === "grid") renderDaysGrid();
-        else if (state.currentView === "detail" && state.selectedDay) renderDayDetail(state.selectedDay);
-        else if (state.currentView === "sets") {
-          if (state.searchQuery.trim()) state.selectedSet = null;   // search runs across all sets
-          renderSetsView();
-        }
-      }, 300);
-    });
+    initSearch();
 
     // Status filters
     $$(".filter-btn[data-status]").forEach(btn => {
