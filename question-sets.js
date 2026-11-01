@@ -30,7 +30,9 @@ const QUESTION_SETS = [
       [2520, "Count the Digits That Divide a Number", "count-the-digits-that-divide-a-number", "E"],
       [9, "Palindrome Number", "palindrome-number", "E"],
       [231, "Power of Two", "power-of-two", "E"],
-      [7, "Reverse Integer", "reverse-integer", "M"]
+      [7, "Reverse Integer", "reverse-integer", "M"],
+      [273, "Integer to English Words", "integer-to-english-words", "H"],
+      [233, "Number of Digit One", "number-of-digit-one", "H"]
     ]
   },
   {
@@ -38,7 +40,7 @@ const QUESTION_SETS = [
     name: "Arrays",
     icon: "📦",
     description: "In-place updates, counting, and single-pass scans. The base for almost every other pattern.",
-    days: [2, 3, 29, 47],
+    days: [2, 3, 11, 47],
     problems: [
       [1, "Two Sum", "two-sum", "E"],
       [121, "Best Time to Buy and Sell Stock", "best-time-to-buy-and-sell-stock", "E"],
@@ -59,7 +61,10 @@ const QUESTION_SETS = [
       [128, "Longest Consecutive Sequence", "longest-consecutive-sequence", "M"],
       [229, "Majority Element II", "majority-element-ii", "M"],
       [31, "Next Permutation", "next-permutation", "M"],
-      [41, "First Missing Positive", "first-missing-positive", "H"]
+      [41, "First Missing Positive", "first-missing-positive", "H"],
+      [330, "Patching Array", "patching-array", "H"],
+      [1526, "Minimum Number of Increments on Subarrays to Form a Target Array", "minimum-number-of-increments-on-subarrays-to-form-a-target-array", "H"],
+      [2009, "Minimum Number of Operations to Make Array Continuous", "minimum-number-of-operations-to-make-array-continuous", "H"]
     ]
   },
   {
@@ -67,7 +72,7 @@ const QUESTION_SETS = [
     name: "Strings",
     icon: "🔤",
     description: "Character counting, palindromes, parsing and pattern matching (including KMP).",
-    days: [4, 5, 51],
+    days: [4, 5, 50, 51],
     problems: [
       [344, "Reverse String", "reverse-string", "E"],
       [125, "Valid Palindrome", "valid-palindrome", "E"],
@@ -91,7 +96,10 @@ const QUESTION_SETS = [
       [43, "Multiply Strings", "multiply-strings", "M"],
       [686, "Repeated String Match", "repeated-string-match", "M"],
       [271, "Encode and Decode Strings", "encode-and-decode-strings", "M", true],
-      [214, "Shortest Palindrome", "shortest-palindrome", "H"]
+      [214, "Shortest Palindrome", "shortest-palindrome", "H"],
+      [68, "Text Justification", "text-justification", "H"],
+      [30, "Substring with Concatenation of All Words", "substring-with-concatenation-of-all-words", "H"],
+      [336, "Palindrome Pairs", "palindrome-pairs", "H"]
     ]
   },
   {
@@ -99,7 +107,7 @@ const QUESTION_SETS = [
     name: "Hashing (HashMap & HashSet)",
     icon: "#️⃣",
     description: "Trade memory for speed: frequency maps, seen-sets and value-to-index lookups that turn O(n²) into O(n).",
-    days: [3, 5, 29, 30],
+    days: [3, 5, 11, 32],
     problems: [
       [1, "Two Sum", "two-sum", "E"],
       [217, "Contains Duplicate", "contains-duplicate", "E"],
@@ -114,7 +122,9 @@ const QUESTION_SETS = [
       [560, "Subarray Sum Equals K", "subarray-sum-equals-k", "M"],
       [454, "4Sum II", "4sum-ii", "M"],
       [380, "Insert Delete GetRandom O(1)", "insert-delete-getrandom-o1", "M"],
-      [981, "Time Based Key-Value Store", "time-based-key-value-store", "M"]
+      [981, "Time Based Key-Value Store", "time-based-key-value-store", "M"],
+      [149, "Max Points on a Line", "max-points-on-a-line", "H"],
+      [381, "Insert Delete GetRandom O(1) - Duplicates allowed", "insert-delete-getrandom-o1-duplicates-allowed", "H"]
     ]
   },
   {
@@ -122,7 +132,7 @@ const QUESTION_SETS = [
     name: "Two Pointers",
     icon: "👉",
     description: "Converging pointers on sorted data, read/write pointers for in-place edits, and partitioning.",
-    days: [6, 15],
+    days: [6, 9],
     problems: [
       [125, "Valid Palindrome", "valid-palindrome", "E"],
       [680, "Valid Palindrome II", "valid-palindrome-ii", "E"],
@@ -138,7 +148,35 @@ const QUESTION_SETS = [
       [75, "Sort Colors", "sort-colors", "M"],
       [80, "Remove Duplicates from Sorted Array II", "remove-duplicates-from-sorted-array-ii", "M"],
       [881, "Boats to Save People", "boats-to-save-people", "M"],
-      [42, "Trapping Rain Water", "trapping-rain-water", "H"]
+      [42, "Trapping Rain Water", "trapping-rain-water", "H"],
+      [1537, "Get the Maximum Score", "get-the-maximum-score", "H"],
+      [1163, "Last Substring in Lexicographical Order", "last-substring-in-lexicographical-order", "H"]
+    ]
+  },
+  {
+    id: "recursion",
+    name: "Recursion",
+    icon: "🔁",
+    description: "Base case, recursive case and trusting the call stack. The foundation for sorting, trees, backtracking and DP.",
+    days: [7],
+    problems: [
+      [509, "Fibonacci Number", "fibonacci-number", "E"],
+      [231, "Power of Two", "power-of-two", "E"],
+      [326, "Power of Three", "power-of-three", "E"],
+      [342, "Power of Four", "power-of-four", "E"],
+      [344, "Reverse String", "reverse-string", "E"],
+      [206, "Reverse Linked List", "reverse-linked-list", "E"],
+      [21, "Merge Two Sorted Lists", "merge-two-sorted-lists", "E"],
+      [50, "Pow(x, n)", "powx-n", "M"],
+      [24, "Swap Nodes in Pairs", "swap-nodes-in-pairs", "M"],
+      [779, "K-th Symbol in Grammar", "k-th-symbol-in-grammar", "M"],
+      [1823, "Find the Winner of the Circular Game", "find-the-winner-of-the-circular-game", "M"],
+      [1922, "Count Good Numbers", "count-good-numbers", "M"],
+      [394, "Decode String", "decode-string", "M"],
+      [241, "Different Ways to Add Parentheses", "different-ways-to-add-parentheses", "M"],
+      [224, "Basic Calculator", "basic-calculator", "H"],
+      [282, "Expression Add Operators", "expression-add-operators", "H"],
+      [1106, "Parsing A Boolean Expression", "parsing-a-boolean-expression", "H"]
     ]
   },
   {
@@ -146,7 +184,7 @@ const QUESTION_SETS = [
     name: "Sliding Window",
     icon: "🪟",
     description: "Fixed and variable windows over arrays and strings: expand the right edge, shrink the left edge.",
-    days: [15, 16, 31],
+    days: [9, 10, 33],
     problems: [
       [643, "Maximum Average Subarray I", "maximum-average-subarray-i", "E"],
       [121, "Best Time to Buy and Sell Stock", "best-time-to-buy-and-sell-stock", "E"],
@@ -161,7 +199,11 @@ const QUESTION_SETS = [
       [1423, "Maximum Points You Can Obtain from Cards", "maximum-points-you-can-obtain-from-cards", "M"],
       [53, "Maximum Subarray", "maximum-subarray", "M"],
       [76, "Minimum Window Substring", "minimum-window-substring", "H"],
-      [239, "Sliding Window Maximum", "sliding-window-maximum", "H"]
+      [239, "Sliding Window Maximum", "sliding-window-maximum", "H"],
+      [992, "Subarrays with K Different Integers", "subarrays-with-k-different-integers", "H"],
+      [480, "Sliding Window Median", "sliding-window-median", "H"],
+      [2444, "Count Subarrays With Fixed Bounds", "count-subarrays-with-fixed-bounds", "H"],
+      [30, "Substring with Concatenation of All Words", "substring-with-concatenation-of-all-words", "H"]
     ]
   },
   {
@@ -169,7 +211,7 @@ const QUESTION_SETS = [
     name: "Prefix Sum",
     icon: "➕",
     description: "Precompute running totals to answer range queries in O(1), often combined with a HashMap of earlier sums.",
-    days: [29],
+    days: [11],
     problems: [
       [1480, "Running Sum of 1d Array", "running-sum-of-1d-array", "E"],
       [1732, "Find the Highest Altitude", "find-the-highest-altitude", "E"],
@@ -180,7 +222,10 @@ const QUESTION_SETS = [
       [523, "Continuous Subarray Sum", "continuous-subarray-sum", "M"],
       [974, "Subarray Sums Divisible by K", "subarray-sums-divisible-by-k", "M"],
       [525, "Contiguous Array", "contiguous-array", "M"],
-      [304, "Range Sum Query 2D - Immutable", "range-sum-query-2d-immutable", "M"]
+      [304, "Range Sum Query 2D - Immutable", "range-sum-query-2d-immutable", "M"],
+      [1074, "Number of Submatrices That Sum to Target", "number-of-submatrices-that-sum-to-target", "H"],
+      [363, "Max Sum of Rectangle No Larger Than K", "max-sum-of-rectangle-no-larger-than-k", "H"],
+      [862, "Shortest Subarray with Sum at Least K", "shortest-subarray-with-sum-at-least-k", "H"]
     ]
   },
   {
@@ -188,7 +233,7 @@ const QUESTION_SETS = [
     name: "Linked List",
     icon: "🔗",
     description: "Pointer manipulation: reversing, merging, slow/fast pointers, dummy heads and cycle detection.",
-    days: [7, 8, 30, 47],
+    days: [12, 13, 32, 47],
     problems: [
       [206, "Reverse Linked List", "reverse-linked-list", "E"],
       [876, "Middle of the Linked List", "middle-of-the-linked-list", "E"],
@@ -208,7 +253,8 @@ const QUESTION_SETS = [
       [707, "Design Linked List", "design-linked-list", "M"],
       [146, "LRU Cache", "lru-cache", "M"],
       [23, "Merge k Sorted Lists", "merge-k-sorted-lists", "H"],
-      [25, "Reverse Nodes in k-Group", "reverse-nodes-in-k-group", "H"]
+      [25, "Reverse Nodes in k-Group", "reverse-nodes-in-k-group", "H"],
+      [1206, "Design Skiplist", "design-skiplist", "H"]
     ]
   },
   {
@@ -216,7 +262,7 @@ const QUESTION_SETS = [
     name: "Stack & Monotonic Stack",
     icon: "🥞",
     description: "LIFO problems: matching brackets, expression evaluation, and monotonic stacks for next-greater/smaller questions.",
-    days: [8, 9, 31, 53],
+    days: [13, 14, 33, 53],
     problems: [
       [20, "Valid Parentheses", "valid-parentheses", "E"],
       [232, "Implement Queue using Stacks", "implement-queue-using-stacks", "E"],
@@ -234,7 +280,9 @@ const QUESTION_SETS = [
       [227, "Basic Calculator II", "basic-calculator-ii", "M"],
       [84, "Largest Rectangle in Histogram", "largest-rectangle-in-histogram", "H"],
       [85, "Maximal Rectangle", "maximal-rectangle", "H"],
-      [32, "Longest Valid Parentheses", "longest-valid-parentheses", "H"]
+      [32, "Longest Valid Parentheses", "longest-valid-parentheses", "H"],
+      [224, "Basic Calculator", "basic-calculator", "H"],
+      [895, "Maximum Frequency Stack", "maximum-frequency-stack", "H"]
     ]
   },
   {
@@ -242,7 +290,7 @@ const QUESTION_SETS = [
     name: "Queue & Deque",
     icon: "🚶",
     description: "FIFO simulation, circular buffers and monotonic deques.",
-    days: [9, 31],
+    days: [14, 33],
     problems: [
       [933, "Number of Recent Calls", "number-of-recent-calls", "E"],
       [232, "Implement Queue using Stacks", "implement-queue-using-stacks", "E"],
@@ -251,7 +299,9 @@ const QUESTION_SETS = [
       [641, "Design Circular Deque", "design-circular-deque", "M"],
       [649, "Dota2 Senate", "dota2-senate", "M"],
       [239, "Sliding Window Maximum", "sliding-window-maximum", "H"],
-      [862, "Shortest Subarray with Sum at Least K", "shortest-subarray-with-sum-at-least-k", "H"]
+      [862, "Shortest Subarray with Sum at Least K", "shortest-subarray-with-sum-at-least-k", "H"],
+      [1499, "Max Value of Equation", "max-value-of-equation", "H"],
+      [1425, "Constrained Subsequence Sum", "constrained-subsequence-sum", "H"]
     ]
   },
   {
@@ -259,7 +309,7 @@ const QUESTION_SETS = [
     name: "Binary Search",
     icon: "🔍",
     description: "Classic search on sorted arrays, rotated arrays, and \"binary search on the answer\".",
-    days: [10, 11, 52],
+    days: [15, 16, 52],
     problems: [
       [704, "Binary Search", "binary-search", "E"],
       [35, "Search Insert Position", "search-insert-position", "E"],
@@ -277,7 +327,11 @@ const QUESTION_SETS = [
       [658, "Find K Closest Elements", "find-k-closest-elements", "M"],
       [378, "Kth Smallest Element in a Sorted Matrix", "kth-smallest-element-in-a-sorted-matrix", "M"],
       [410, "Split Array Largest Sum", "split-array-largest-sum", "H"],
-      [4, "Median of Two Sorted Arrays", "median-of-two-sorted-arrays", "H"]
+      [4, "Median of Two Sorted Arrays", "median-of-two-sorted-arrays", "H"],
+      [154, "Find Minimum in Rotated Sorted Array II", "find-minimum-in-rotated-sorted-array-ii", "H"],
+      [1095, "Find in Mountain Array", "find-in-mountain-array", "H"],
+      [719, "Find K-th Smallest Pair Distance", "find-k-th-smallest-pair-distance", "H"],
+      [2141, "Maximum Running Time of N Computers", "maximum-running-time-of-n-computers", "H"]
     ]
   },
   {
@@ -285,7 +339,7 @@ const QUESTION_SETS = [
     name: "Binary Tree (DFS)",
     icon: "🌳",
     description: "Recursive traversals, height/diameter style \"return info from children\" problems, and tree construction.",
-    days: [12, 14, 26, 41],
+    days: [18, 20, 30, 41],
     problems: [
       [94, "Binary Tree Inorder Traversal", "binary-tree-inorder-traversal", "E"],
       [144, "Binary Tree Preorder Traversal", "binary-tree-preorder-traversal", "E"],
@@ -304,7 +358,10 @@ const QUESTION_SETS = [
       [114, "Flatten Binary Tree to Linked List", "flatten-binary-tree-to-linked-list", "M"],
       [105, "Construct Binary Tree from Preorder and Inorder Traversal", "construct-binary-tree-from-preorder-and-inorder-traversal", "M"],
       [124, "Binary Tree Maximum Path Sum", "binary-tree-maximum-path-sum", "H"],
-      [297, "Serialize and Deserialize Binary Tree", "serialize-and-deserialize-binary-tree", "H"]
+      [297, "Serialize and Deserialize Binary Tree", "serialize-and-deserialize-binary-tree", "H"],
+      [968, "Binary Tree Cameras", "binary-tree-cameras", "H"],
+      [987, "Vertical Order Traversal of a Binary Tree", "vertical-order-traversal-of-a-binary-tree", "H"],
+      [2458, "Height of Binary Tree After Subtree Removal Queries", "height-of-binary-tree-after-subtree-removal-queries", "H"]
     ]
   },
   {
@@ -312,7 +369,7 @@ const QUESTION_SETS = [
     name: "Tree BFS (Level Order)",
     icon: "🪜",
     description: "Queue-based level-by-level traversal and per-level questions.",
-    days: [13],
+    days: [19],
     problems: [
       [637, "Average of Levels in Binary Tree", "average-of-levels-in-binary-tree", "E"],
       [111, "Minimum Depth of Binary Tree", "minimum-depth-of-binary-tree", "E"],
@@ -320,7 +377,9 @@ const QUESTION_SETS = [
       [103, "Binary Tree Zigzag Level Order Traversal", "binary-tree-zigzag-level-order-traversal", "M"],
       [199, "Binary Tree Right Side View", "binary-tree-right-side-view", "M"],
       [116, "Populating Next Right Pointers in Each Node", "populating-next-right-pointers-in-each-node", "M"],
-      [662, "Maximum Width of Binary Tree", "maximum-width-of-binary-tree", "M"]
+      [662, "Maximum Width of Binary Tree", "maximum-width-of-binary-tree", "M"],
+      [987, "Vertical Order Traversal of a Binary Tree", "vertical-order-traversal-of-a-binary-tree", "H"],
+      [297, "Serialize and Deserialize Binary Tree", "serialize-and-deserialize-binary-tree", "H"]
     ]
   },
   {
@@ -328,7 +387,7 @@ const QUESTION_SETS = [
     name: "Binary Search Tree",
     icon: "🌲",
     description: "Use the BST ordering property: inorder is sorted, go left or right instead of exploring both sides.",
-    days: [13, 14],
+    days: [19, 20],
     problems: [
       [700, "Search in a Binary Search Tree", "search-in-a-binary-search-tree", "E"],
       [108, "Convert Sorted Array to Binary Search Tree", "convert-sorted-array-to-binary-search-tree", "E"],
@@ -341,7 +400,9 @@ const QUESTION_SETS = [
       [701, "Insert into a Binary Search Tree", "insert-into-a-binary-search-tree", "M"],
       [450, "Delete Node in a BST", "delete-node-in-a-bst", "M"],
       [173, "Binary Search Tree Iterator", "binary-search-tree-iterator", "M"],
-      [669, "Trim a Binary Search Tree", "trim-a-binary-search-tree", "M"]
+      [669, "Trim a Binary Search Tree", "trim-a-binary-search-tree", "M"],
+      [1373, "Maximum Sum BST in Binary Tree", "maximum-sum-bst-in-binary-tree", "H"],
+      [220, "Contains Duplicate III", "contains-duplicate-iii", "H"]
     ]
   },
   {
@@ -349,7 +410,7 @@ const QUESTION_SETS = [
     name: "Heap / Priority Queue",
     icon: "⛰️",
     description: "Top-K, k-way merge, scheduling and running medians with Java's PriorityQueue.",
-    days: [17, 25, 26, 38, 52],
+    days: [21, 29, 30, 46, 52],
     problems: [
       [1046, "Last Stone Weight", "last-stone-weight", "E"],
       [703, "Kth Largest Element in a Stream", "kth-largest-element-in-a-stream", "E"],
@@ -364,7 +425,11 @@ const QUESTION_SETS = [
       [355, "Design Twitter", "design-twitter", "M"],
       [23, "Merge k Sorted Lists", "merge-k-sorted-lists", "H"],
       [295, "Find Median from Data Stream", "find-median-from-data-stream", "H"],
-      [502, "IPO", "ipo", "H"]
+      [502, "IPO", "ipo", "H"],
+      [632, "Smallest Range Covering Elements from K Lists", "smallest-range-covering-elements-from-k-lists", "H"],
+      [857, "Minimum Cost to Hire K Workers", "minimum-cost-to-hire-k-workers", "H"],
+      [871, "Minimum Number of Refueling Stops", "minimum-number-of-refueling-stops", "H"],
+      [480, "Sliding Window Median", "sliding-window-median", "H"]
     ]
   },
   {
@@ -372,7 +437,7 @@ const QUESTION_SETS = [
     name: "Graphs: BFS & DFS",
     icon: "🕸️",
     description: "Grid and adjacency-list traversals, connected components, multi-source BFS and topological sort.",
-    days: [18, 19, 37],
+    days: [22, 23, 38],
     problems: [
       [733, "Flood Fill", "flood-fill", "E"],
       [1971, "Find if Path Exists in Graph", "find-if-path-exists-in-graph", "E"],
@@ -385,7 +450,10 @@ const QUESTION_SETS = [
       [130, "Surrounded Regions", "surrounded-regions", "M"],
       [417, "Pacific Atlantic Water Flow", "pacific-atlantic-water-flow", "M"],
       [207, "Course Schedule", "course-schedule", "M"],
-      [210, "Course Schedule II", "course-schedule-ii", "M"]
+      [210, "Course Schedule II", "course-schedule-ii", "M"],
+      [329, "Longest Increasing Path in a Matrix", "longest-increasing-path-in-a-matrix", "H"],
+      [815, "Bus Routes", "bus-routes", "H"],
+      [1293, "Shortest Path in a Grid with Obstacles Elimination", "shortest-path-in-a-grid-with-obstacles-elimination", "H"]
     ]
   },
   {
@@ -393,7 +461,7 @@ const QUESTION_SETS = [
     name: "Graphs: Union-Find & Shortest Paths",
     icon: "🗺️",
     description: "Disjoint sets, Dijkstra, Bellman-Ford style limits, topological ordering and bridges.",
-    days: [27, 37, 53],
+    days: [31, 38, 53],
     problems: [
       [684, "Redundant Connection", "redundant-connection", "M"],
       [261, "Graph Valid Tree", "graph-valid-tree", "M", true],
@@ -404,7 +472,10 @@ const QUESTION_SETS = [
       [1631, "Path With Minimum Effort", "path-with-minimum-effort", "M"],
       [127, "Word Ladder", "word-ladder", "H"],
       [269, "Alien Dictionary", "alien-dictionary", "H", true],
-      [1192, "Critical Connections in a Network", "critical-connections-in-a-network", "H"]
+      [1192, "Critical Connections in a Network", "critical-connections-in-a-network", "H"],
+      [778, "Swim in Rising Water", "swim-in-rising-water", "H"],
+      [332, "Reconstruct Itinerary", "reconstruct-itinerary", "H"],
+      [1579, "Remove Max Number of Edges to Keep Graph Fully Traversable", "remove-max-number-of-edges-to-keep-graph-fully-traversable", "H"]
     ]
   },
   {
@@ -412,7 +483,7 @@ const QUESTION_SETS = [
     name: "Backtracking",
     icon: "↩️",
     description: "Choose → explore → un-choose: subsets, permutations, combinations and constraint puzzles.",
-    days: [20, 33, 41, 56],
+    days: [24, 34, 41, 56],
     problems: [
       [78, "Subsets", "subsets", "M"],
       [90, "Subsets II", "subsets-ii", "M"],
@@ -429,7 +500,10 @@ const QUESTION_SETS = [
       [51, "N-Queens", "n-queens", "H"],
       [52, "N-Queens II", "n-queens-ii", "H"],
       [37, "Sudoku Solver", "sudoku-solver", "H"],
-      [212, "Word Search II", "word-search-ii", "H"]
+      [212, "Word Search II", "word-search-ii", "H"],
+      [301, "Remove Invalid Parentheses", "remove-invalid-parentheses", "H"],
+      [282, "Expression Add Operators", "expression-add-operators", "H"],
+      [980, "Unique Paths III", "unique-paths-iii", "H"]
     ]
   },
   {
@@ -437,7 +511,7 @@ const QUESTION_SETS = [
     name: "Dynamic Programming: 1D",
     icon: "🧱",
     description: "Fibonacci-style recurrences, knapsack variants and subsequence problems on a single index.",
-    days: [21, 22, 42, 55],
+    days: [25, 26, 42, 55],
     problems: [
       [509, "Fibonacci Number", "fibonacci-number", "E"],
       [70, "Climbing Stairs", "climbing-stairs", "E"],
@@ -454,7 +528,11 @@ const QUESTION_SETS = [
       [91, "Decode Ways", "decode-ways", "M"],
       [300, "Longest Increasing Subsequence", "longest-increasing-subsequence", "M"],
       [416, "Partition Equal Subset Sum", "partition-equal-subset-sum", "M"],
-      [647, "Palindromic Substrings", "palindromic-substrings", "M"]
+      [647, "Palindromic Substrings", "palindromic-substrings", "M"],
+      [123, "Best Time to Buy and Sell Stock III", "best-time-to-buy-and-sell-stock-iii", "H"],
+      [188, "Best Time to Buy and Sell Stock IV", "best-time-to-buy-and-sell-stock-iv", "H"],
+      [403, "Frog Jump", "frog-jump", "H"],
+      [1235, "Maximum Profit in Job Scheduling", "maximum-profit-in-job-scheduling", "H"]
     ]
   },
   {
@@ -462,7 +540,7 @@ const QUESTION_SETS = [
     name: "Dynamic Programming: 2D",
     icon: "🧮",
     description: "Grid paths, two-string tables (LCS, edit distance), interval DP and the hard string-matching classics.",
-    days: [23, 34, 41, 55, 56],
+    days: [27, 37, 41, 55, 56],
     problems: [
       [62, "Unique Paths", "unique-paths", "M"],
       [63, "Unique Paths II", "unique-paths-ii", "M"],
@@ -480,7 +558,10 @@ const QUESTION_SETS = [
       [44, "Wildcard Matching", "wildcard-matching", "H"],
       [32, "Longest Valid Parentheses", "longest-valid-parentheses", "H"],
       [312, "Burst Balloons", "burst-balloons", "H"],
-      [132, "Palindrome Partitioning II", "palindrome-partitioning-ii", "H"]
+      [132, "Palindrome Partitioning II", "palindrome-partitioning-ii", "H"],
+      [174, "Dungeon Game", "dungeon-game", "H"],
+      [1312, "Minimum Insertion Steps to Make a String Palindrome", "minimum-insertion-steps-to-make-a-string-palindrome", "H"],
+      [87, "Scramble String", "scramble-string", "H"]
     ]
   },
   {
@@ -488,7 +569,7 @@ const QUESTION_SETS = [
     name: "Greedy",
     icon: "💰",
     description: "Make the locally best choice and prove it can't hurt: reachability, scheduling and counting.",
-    days: [24, 38],
+    days: [28, 46],
     problems: [
       [455, "Assign Cookies", "assign-cookies", "E"],
       [860, "Lemonade Change", "lemonade-change", "E"],
@@ -501,7 +582,10 @@ const QUESTION_SETS = [
       [678, "Valid Parenthesis String", "valid-parenthesis-string", "M"],
       [452, "Minimum Number of Arrows to Burst Balloons", "minimum-number-of-arrows-to-burst-balloons", "M"],
       [621, "Task Scheduler", "task-scheduler", "M"],
-      [135, "Candy", "candy", "H"]
+      [135, "Candy", "candy", "H"],
+      [630, "Course Schedule III", "course-schedule-iii", "H"],
+      [1326, "Minimum Number of Taps to Open to Water a Garden", "minimum-number-of-taps-to-open-to-water-a-garden", "H"],
+      [330, "Patching Array", "patching-array", "H"]
     ]
   },
   {
@@ -509,7 +593,7 @@ const QUESTION_SETS = [
     name: "Intervals",
     icon: "📏",
     description: "Sort by start (or end), then merge, insert or count overlaps.",
-    days: [24, 25],
+    days: [28, 29],
     problems: [
       [228, "Summary Ranges", "summary-ranges", "E"],
       [252, "Meeting Rooms", "meeting-rooms", "E", true],
@@ -519,7 +603,10 @@ const QUESTION_SETS = [
       [452, "Minimum Number of Arrows to Burst Balloons", "minimum-number-of-arrows-to-burst-balloons", "M"],
       [986, "Interval List Intersections", "interval-list-intersections", "M"],
       [729, "My Calendar I", "my-calendar-i", "M"],
-      [253, "Meeting Rooms II", "meeting-rooms-ii", "M", true]
+      [253, "Meeting Rooms II", "meeting-rooms-ii", "M", true],
+      [352, "Data Stream as Disjoint Intervals", "data-stream-as-disjoint-intervals", "H"],
+      [715, "Range Module", "range-module", "H"],
+      [1851, "Minimum Interval to Include Each Query", "minimum-interval-to-include-each-query", "H"]
     ]
   },
   {
@@ -527,7 +614,7 @@ const QUESTION_SETS = [
     name: "Matrix",
     icon: "🔲",
     description: "2D index juggling: spiral order, in-place rotation, marking rows/columns and sorted-matrix search.",
-    days: [25, 47],
+    days: [29, 47],
     problems: [
       [867, "Transpose Matrix", "transpose-matrix", "E"],
       [1572, "Matrix Diagonal Sum", "matrix-diagonal-sum", "E"],
@@ -539,7 +626,10 @@ const QUESTION_SETS = [
       [36, "Valid Sudoku", "valid-sudoku", "M"],
       [289, "Game of Life", "game-of-life", "M"],
       [240, "Search a 2D Matrix II", "search-a-2d-matrix-ii", "M"],
-      [378, "Kth Smallest Element in a Sorted Matrix", "kth-smallest-element-in-a-sorted-matrix", "M"]
+      [378, "Kth Smallest Element in a Sorted Matrix", "kth-smallest-element-in-a-sorted-matrix", "M"],
+      [85, "Maximal Rectangle", "maximal-rectangle", "H"],
+      [329, "Longest Increasing Path in a Matrix", "longest-increasing-path-in-a-matrix", "H"],
+      [1074, "Number of Submatrices That Sum to Target", "number-of-submatrices-that-sum-to-target", "H"]
     ]
   },
   {
@@ -547,7 +637,7 @@ const QUESTION_SETS = [
     name: "Trie",
     icon: "🔠",
     description: "Prefix trees for word lookup, autocomplete and bitwise tricks.",
-    days: [26, 41],
+    days: [30, 41],
     problems: [
       [14, "Longest Common Prefix", "longest-common-prefix", "E"],
       [208, "Implement Trie (Prefix Tree)", "implement-trie-prefix-tree", "M"],
@@ -557,7 +647,11 @@ const QUESTION_SETS = [
       [720, "Longest Word in Dictionary", "longest-word-in-dictionary", "M"],
       [1268, "Search Suggestions System", "search-suggestions-system", "M"],
       [421, "Maximum XOR of Two Numbers in an Array", "maximum-xor-of-two-numbers-in-an-array", "M"],
-      [212, "Word Search II", "word-search-ii", "H"]
+      [212, "Word Search II", "word-search-ii", "H"],
+      [336, "Palindrome Pairs", "palindrome-pairs", "H"],
+      [745, "Prefix and Suffix Search", "prefix-and-suffix-search", "H"],
+      [1032, "Stream of Characters", "stream-of-characters", "H"],
+      [1707, "Maximum XOR With an Element From Array", "maximum-xor-with-an-element-from-array", "H"]
     ]
   },
   {
@@ -565,7 +659,7 @@ const QUESTION_SETS = [
     name: "Bit Manipulation & Math",
     icon: "🔢",
     description: "XOR tricks, bit counting, fast exponentiation, primes and overflow-safe arithmetic.",
-    days: [28],
+    days: [17],
     problems: [
       [136, "Single Number", "single-number", "E"],
       [191, "Number of 1 Bits", "number-of-1-bits", "E"],
@@ -583,7 +677,10 @@ const QUESTION_SETS = [
       [201, "Bitwise AND of Numbers Range", "bitwise-and-of-numbers-range", "M"],
       [50, "Pow(x, n)", "powx-n", "M"],
       [7, "Reverse Integer", "reverse-integer", "M"],
-      [204, "Count Primes", "count-primes", "M"]
+      [204, "Count Primes", "count-primes", "M"],
+      [1611, "Minimum One Bit Operations to Make Integers Zero", "minimum-one-bit-operations-to-make-integers-zero", "H"],
+      [1835, "Find XOR Sum of All Pairs Bitwise AND", "find-xor-sum-of-all-pairs-bitwise-and", "H"],
+      [1012, "Numbers With Repeated Digits", "numbers-with-repeated-digits", "H"]
     ]
   },
   {
@@ -591,7 +688,7 @@ const QUESTION_SETS = [
     name: "Sorting & Divide and Conquer",
     icon: "📊",
     description: "Implement merge sort and quick sort, write custom comparators, and use merge-sort counting tricks.",
-    days: [50],
+    days: [8],
     problems: [
       [88, "Merge Sorted Array", "merge-sorted-array", "E"],
       [1122, "Relative Sort Array", "relative-sort-array", "E"],
@@ -606,7 +703,9 @@ const QUESTION_SETS = [
       [164, "Maximum Gap", "maximum-gap", "M"],
       [324, "Wiggle Sort II", "wiggle-sort-ii", "M"],
       [315, "Count of Smaller Numbers After Self", "count-of-smaller-numbers-after-self", "H"],
-      [493, "Reverse Pairs", "reverse-pairs", "H"]
+      [493, "Reverse Pairs", "reverse-pairs", "H"],
+      [327, "Count of Range Sum", "count-of-range-sum", "H"],
+      [2251, "Number of Flowers in Full Bloom", "number-of-flowers-in-full-bloom", "H"]
     ]
   },
   {
@@ -614,7 +713,7 @@ const QUESTION_SETS = [
     name: "Data Structure Design",
     icon: "🏗️",
     description: "Combine HashMaps, linked lists, heaps and arrays to hit required time complexities, as in LLD-style coding rounds.",
-    days: [30, 38, 42],
+    days: [32, 42, 46],
     problems: [
       [705, "Design HashSet", "design-hashset", "E"],
       [706, "Design HashMap", "design-hashmap", "E"],
@@ -630,7 +729,10 @@ const QUESTION_SETS = [
       [1472, "Design Browser History", "design-browser-history", "M"],
       [535, "Encode and Decode TinyURL", "encode-and-decode-tinyurl", "M"],
       [295, "Find Median from Data Stream", "find-median-from-data-stream", "H"],
-      [460, "LFU Cache", "lfu-cache", "H"]
+      [460, "LFU Cache", "lfu-cache", "H"],
+      [432, "All O`one Data Structure", "all-oone-data-structure", "H"],
+      [895, "Maximum Frequency Stack", "maximum-frequency-stack", "H"],
+      [381, "Insert Delete GetRandom O(1) - Duplicates allowed", "insert-delete-getrandom-o1-duplicates-allowed", "H"]
     ]
   }
 ];

@@ -2,6 +2,10 @@
 // 60-Day SDE Interview Prep – Complete Curriculum Data
 // Inspired by 60dayplan PDF + comprehensive DSA Practice
 // Target: Backend/Full-Stack Java Developer with 2–3 YOE
+//
+// Subtopic ids are permanent progress keys (saved checkmarks point at them).
+// When a topic moves to another day it keeps its ids, so an id's "dN" prefix
+// is where it was first added, not necessarily the day it is on now.
 // ============================================================
 
 const CURRICULUM_DATA = [
@@ -45,11 +49,11 @@ const CURRICULUM_DATA = [
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
-    title: "OOP Deep Dive — Inheritance, Polymorphism & Abstraction",
+    title: "OOP Deep Dive — Inheritance, Polymorphism, Abstraction & the Object Class",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Java — Inheritance & Polymorphism",
+        name: "Java — Inheritance, Polymorphism & Object Class",
         category: "Java",
         subtopics: [
           { id: "d2_t1_s1", label: "Inheritance — extends keyword, IS-A relationship, single inheritance in Java, Object class" },
@@ -59,7 +63,9 @@ const CURRICULUM_DATA = [
           { id: "d2_t1_s5", label: "Abstract classes — abstract methods, concrete methods, constructors; when to use abstract class vs interface" },
           { id: "d2_t1_s6", label: "Interfaces — default methods (Java 8), static methods, multiple interface implementation" },
           { id: "d2_t1_s7", label: "Diamond problem — how Java resolves it with interfaces; explicit super call with InterfaceName.super.method()" },
-          { id: "d2_t1_s8", label: "Composition vs Inheritance — 'has-a' vs 'is-a'; why prefer composition (GoF principle)" }
+          { id: "d2_t1_s8", label: "Composition vs Inheritance — 'has-a' vs 'is-a'; why prefer composition (GoF principle)" },
+          { id: "d2_t4_s1", label: "Object class methods — toString(), equals()/hashCode(), getClass(), clone(), wait()/notify(): what every class inherits" },
+          { id: "d2_t4_s2", label: "clone() — shallow vs deep copy, the Cloneable marker, why clone() is considered broken; prefer copy constructors / static factories" }
         ]
       },
       {
@@ -80,7 +86,7 @@ const CURRICULUM_DATA = [
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
-    title: "OOP Advanced — Encapsulation, Immutability & Inner Classes",
+    title: "OOP Advanced — Encapsulation, Immutability, Enums & Comparators",
     estimatedTime: "3–4 hrs",
     topics: [
       {
@@ -89,12 +95,12 @@ const CURRICULUM_DATA = [
         subtopics: [
           { id: "d3_t1_s1", label: "Encapsulation — private fields + public getters/setters; JavaBean conventions" },
           { id: "d3_t1_s2", label: "Immutable classes — final class, final fields, no setters, defensive copies for mutable fields" },
-          { id: "d3_t1_s3", label: "Why String is immutable — thread-safety, caching, security, String pool benefits" },
-          { id: "d3_t1_s4", label: "transient keyword — excluded from serialization; gets default value on deserialization" },
-          { id: "d3_t1_s5", label: "Serialization — Serializable vs Externalizable, serialVersionUID, custom readObject/writeObject" },
           { id: "d3_t1_s6", label: "Inner classes — static nested, non-static inner, local, anonymous; when to use each" },
+          { id: "d3_t1_s8", label: "Enum — constants, constructor, methods, EnumSet, EnumMap; using enum instead of int constants" },
+          { id: "d14_t1_s8", label: "Comparable vs Comparator — natural ordering vs external; Comparator.comparing().thenComparing() chains" },
           { id: "d3_t1_s7", label: "Marker interfaces — Serializable, Cloneable, RandomAccess; what they signal" },
-          { id: "d3_t1_s8", label: "Enum — constants, constructor, methods, EnumSet, EnumMap; using enum instead of int constants" }
+          { id: "d3_t1_s4", label: "transient keyword — excluded from serialization; gets default value on deserialization" },
+          { id: "d3_t1_s5", label: "Serialization — Serializable vs Externalizable, serialVersionUID, custom readObject/writeObject" }
         ]
       },
       {
@@ -112,6 +118,41 @@ const CURRICULUM_DATA = [
   },
   {
     day: 4,
+    phase: "Phase 1: Core Java",
+    phaseRange: "Days 1–10",
+    categories: ["Java", "DSA"],
+    title: "Exception Handling & Generics",
+    estimatedTime: "3–4 hrs",
+    topics: [
+      {
+        name: "Java — Exceptions & Generics",
+        category: "Java",
+        subtopics: [
+          { id: "d7_t1_s1", label: "Exception hierarchy — Throwable → Error / Exception; checked vs unchecked (RuntimeException)" },
+          { id: "d7_t1_s2", label: "try-catch-finally — execution flow; try-with-resources & AutoCloseable (Java 7+)" },
+          { id: "d7_t1_s3", label: "Multi-catch: catch (IOException | SQLException e); exception chaining with cause" },
+          { id: "d7_t1_s4", label: "Custom exceptions — extending Exception vs RuntimeException; best practices" },
+          { id: "d7_t1_s5", label: "Generics — type parameters <T>, <K,V>; bounded types: <T extends Comparable<T>>" },
+          { id: "d7_t1_s6", label: "Wildcards — unbounded (?), upper-bounded (? extends), lower-bounded (? super); PECS principle" },
+          { id: "d7_t1_s7", label: "Type erasure — generics only at compile-time; limitations at runtime (cannot do new T())" },
+          { id: "d7_t1_s9", label: "final, finally, finalize — differences; why finalize is deprecated in Java 9+" }
+        ]
+      },
+      {
+        name: "DSA — Strings: Easy Problems",
+        category: "DSA",
+        subtopics: [
+          { id: "d4_t2_s1", label: "Solve: Valid Palindrome (two pointers, ignore non-alphanumeric)" },
+          { id: "d4_t2_s2", label: "Solve: Valid Anagram (frequency counting with HashMap or int[26])" },
+          { id: "d4_t2_s3", label: "Solve: Reverse String (in-place)" },
+          { id: "d4_t2_s4", label: "Solve: Longest Common Prefix" },
+          { id: "d4_t2_s5", label: "Solve: First Unique Character in a String" }
+        ]
+      }
+    ]
+  },
+  {
+    day: 5,
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
@@ -133,20 +174,20 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Strings: Easy Problems",
+        name: "DSA — Strings & HashMap Patterns",
         category: "DSA",
         subtopics: [
-          { id: "d4_t2_s1", label: "Solve: Valid Palindrome (two pointers, ignore non-alphanumeric)" },
-          { id: "d4_t2_s2", label: "Solve: Valid Anagram (frequency counting with HashMap or int[26])" },
-          { id: "d4_t2_s3", label: "Solve: Reverse String (in-place)" },
-          { id: "d4_t2_s4", label: "Solve: Longest Common Prefix" },
-          { id: "d4_t2_s5", label: "Solve: First Unique Character in a String" }
+          { id: "d5_t2_s1", label: "HashMap fundamentals — put, get, containsKey, getOrDefault in Java" },
+          { id: "d5_t2_s2", label: "Solve: Group Anagrams (HashMap with sorted key pattern)" },
+          { id: "d5_t2_s3", label: "Solve: Ransom Note (frequency map)" },
+          { id: "d5_t2_s4", label: "Solve: Isomorphic Strings" },
+          { id: "d5_t2_s5", label: "Solve: Word Pattern" }
         ]
       }
     ]
   },
   {
-    day: 5,
+    day: 6,
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
@@ -169,42 +210,6 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Strings & HashMap Patterns",
-        category: "DSA",
-        subtopics: [
-          { id: "d5_t2_s1", label: "HashMap fundamentals — put, get, containsKey, getOrDefault in Java" },
-          { id: "d5_t2_s2", label: "Solve: Group Anagrams (HashMap with sorted key pattern)" },
-          { id: "d5_t2_s3", label: "Solve: Ransom Note (frequency map)" },
-          { id: "d5_t2_s4", label: "Solve: Isomorphic Strings" },
-          { id: "d5_t2_s5", label: "Solve: Word Pattern" }
-        ]
-      }
-    ]
-  },
-  {
-    day: 6,
-    phase: "Phase 1: Core Java",
-    phaseRange: "Days 1–10",
-    categories: ["Java", "DSA"],
-    title: "Java 8 — Optional, Date/Time API & Java 11–17 Features",
-    estimatedTime: "3–4 hrs",
-    topics: [
-      {
-        name: "Java 8+ — Optional, DateTime & Modern Features",
-        category: "Java",
-        subtopics: [
-          { id: "d6_t1_s1", label: "Optional<T> — of(), ofNullable(), empty(); orElse(), orElseGet(), orElseThrow()" },
-          { id: "d6_t1_s2", label: "Optional chaining — map(), flatMap(), filter(), ifPresent(); avoid get() without isPresent()" },
-          { id: "d6_t1_s3", label: "Code pattern: Optional.ofNullable(user).map(User::getEmail).orElse('N/A')" },
-          { id: "d6_t1_s4", label: "Default & static methods in interfaces — multiple inheritance of behavior, resolution rules" },
-          { id: "d6_t1_s5", label: "Date/Time API: LocalDate, LocalTime, LocalDateTime, ZonedDateTime — immutable, thread-safe" },
-          { id: "d6_t1_s6", label: "Duration (time-based) vs Period (date-based); DateTimeFormatter for formatting/parsing" },
-          { id: "d6_t1_s7", label: "Java 11: var, String methods (isBlank, strip, lines, repeat), Files.readString/writeString" },
-          { id: "d6_t1_s8", label: "Java 14–17: Records (data carriers), Sealed classes, Text blocks (\"\"\"), Pattern matching instanceof" },
-          { id: "d6_t1_s9", label: "Switch expressions (Java 14+) — arrow syntax, yield keyword, return values from switch" }
-        ]
-      },
-      {
         name: "DSA — Two Pointers: Easy",
         category: "DSA",
         subtopics: [
@@ -222,33 +227,34 @@ const CURRICULUM_DATA = [
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
-    title: "Exception Handling, Generics & JVM Memory",
+    title: "Optional, Date/Time API & Modern Java (10 → 21)",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Java — Exceptions, Generics & Memory Model",
+        name: "Java 8+ — Optional, Date/Time & Modern Java (10 → 21)",
         category: "Java",
         subtopics: [
-          { id: "d7_t1_s1", label: "Exception hierarchy — Throwable → Error / Exception; checked vs unchecked (RuntimeException)" },
-          { id: "d7_t1_s2", label: "try-catch-finally — execution flow; try-with-resources & AutoCloseable (Java 7+)" },
-          { id: "d7_t1_s3", label: "Multi-catch: catch (IOException | SQLException e); exception chaining with cause" },
-          { id: "d7_t1_s4", label: "Custom exceptions — extending Exception vs RuntimeException; best practices" },
-          { id: "d7_t1_s5", label: "Generics — type parameters <T>, <K,V>; bounded types: <T extends Comparable<T>>" },
-          { id: "d7_t1_s6", label: "Wildcards — unbounded (?), upper-bounded (? extends), lower-bounded (? super); PECS principle" },
-          { id: "d7_t1_s7", label: "Type erasure — generics only at compile-time; limitations at runtime (cannot do new T())" },
-          { id: "d7_t1_s8", label: "JVM Architecture — Stack (per thread) vs Heap (shared), Method Area, GC Roots, String Pool location" },
-          { id: "d7_t1_s9", label: "final, finally, finalize — differences; why finalize is deprecated in Java 9+" }
+          { id: "d6_t1_s1", label: "Optional<T> — of(), ofNullable(), empty(); orElse(), orElseGet(), orElseThrow()" },
+          { id: "d6_t1_s2", label: "Optional chaining — map(), flatMap(), filter(), ifPresent(); avoid get() without isPresent()" },
+          { id: "d6_t1_s3", label: "Code pattern: Optional.ofNullable(user).map(User::getEmail).orElse('N/A')" },
+          { id: "d6_t1_s5", label: "Date/Time API: LocalDate, LocalTime, LocalDateTime, ZonedDateTime — immutable, thread-safe" },
+          { id: "d6_t1_s6", label: "Duration (time-based) vs Period (date-based); DateTimeFormatter for formatting/parsing" },
+          { id: "d6_t1_s7", label: "Java 10–11: var (Java 10), String methods isBlank/strip/lines/repeat and Files.readString/writeString (Java 11)" },
+          { id: "d6_t1_s8", label: "Java 14–17: Records (data carriers), Sealed classes, Text blocks (\"\"\"), Pattern matching instanceof" },
+          { id: "d6_t1_s9", label: "Switch expressions (Java 14+) — arrow syntax, yield keyword, return values from switch" },
+          { id: "d7_t4_s1", label: "Java 21 (LTS): pattern matching for switch, record patterns, sequenced collections (getFirst/getLast/reversed)" },
+          { id: "d7_t4_s2", label: "LTS releases (8, 11, 17, 21, 25) — what changed between them and how to talk about upgrading in interviews" }
         ]
       },
       {
-        name: "DSA — Linked List: Easy",
+        name: "DSA — Recursion Fundamentals",
         category: "DSA",
         subtopics: [
-          { id: "d7_t2_s1", label: "Singly linked list — node structure, traversal, insertion at head/tail" },
-          { id: "d7_t2_s2", label: "Solve: Reverse Linked List (iterative — prev/curr/next pointers)" },
-          { id: "d7_t2_s3", label: "Solve: Middle of Linked List (slow & fast pointers)" },
-          { id: "d7_t2_s4", label: "Solve: Merge Two Sorted Lists" },
-          { id: "d7_t2_s5", label: "Solve: Remove Duplicates from Sorted List" }
+          { id: "d7_t3_s1", label: "Recursion basics — base case + recursive case, each call gets its own stack frame, StackOverflowError" },
+          { id: "d7_t3_s2", label: "Recursion tree & complexity — time ≈ calls × work per call, space = max depth; head vs tail recursion (no TCO in Java)" },
+          { id: "d7_t3_s3", label: "Solve: Print 1→N and N→1, Factorial, Sum of Digits (recursive warm-ups)" },
+          { id: "d7_t3_s4", label: "Solve: Reverse String & Valid Palindrome recursively (two indices, no substring copies)" },
+          { id: "d7_t3_s5", label: "Solve: Power of Two & Fibonacci Number (plain recursion — notice the repeated work DP removes later)" }
         ]
       }
     ]
@@ -272,18 +278,20 @@ const CURRICULUM_DATA = [
           { id: "d8_t1_s5", label: "wait(), notify(), notifyAll() — inter-thread communication on Object monitor; spurious wakeups" },
           { id: "d8_t1_s6", label: "Deadlock — causes (circular wait), detection (jstack), prevention (lock ordering, tryLock timeout)" },
           { id: "d8_t1_s7", label: "ThreadLocal<T> — per-thread storage without synchronization; use for request context, DB connections" },
-          { id: "d8_t1_s8", label: "Thread.sleep() vs Object.wait() — differences; Thread.yield() and thread priority" }
+          { id: "d8_t1_s8", label: "Thread.sleep() vs Object.wait() — differences; Thread.yield() and thread priority" },
+          { id: "d8_t4_s1", label: "Java Memory Model — happens-before rules, instruction reordering, safe publication; double-checked locking singleton and why it needs volatile" }
         ]
       },
       {
-        name: "DSA — Linked List: Medium & Stacks Intro",
+        name: "DSA — Sorting Algorithms",
         category: "DSA",
         subtopics: [
-          { id: "d8_t2_s1", label: "Solve: Linked List Cycle Detection (Floyd's Tortoise & Hare)" },
-          { id: "d8_t2_s2", label: "Solve: Remove Nth Node From End of List" },
-          { id: "d8_t2_s3", label: "Solve: Palindrome Linked List" },
-          { id: "d8_t2_s4", label: "Stack basics — LIFO, push, pop, peek; Java Stack class vs ArrayDeque" },
-          { id: "d8_t2_s5", label: "Solve: Valid Parentheses (stack)" }
+          { id: "d8_t3_s1", label: "Elementary sorts — Bubble, Selection, Insertion: how each works, O(n²), stability, why insertion sort is fast on nearly-sorted data" },
+          { id: "d50_t2_s1", label: "Merge Sort — implementation, O(n log n), stable, O(n) space; when to use" },
+          { id: "d50_t2_s2", label: "Quick Sort — partition, average O(n log n), worst O(n²); pivot strategies" },
+          { id: "d8_t3_s2", label: "Java sorting — Arrays.sort (dual-pivot quicksort for primitives, TimSort for objects), Comparable vs Comparator, sorting with lambdas" },
+          { id: "d50_t2_s4", label: "Solve: Largest Number (custom comparator sort)" },
+          { id: "d8_t3_s3", label: "Solve: Sort an Array (implement merge sort yourself)" }
         ]
       }
     ]
@@ -293,7 +301,7 @@ const CURRICULUM_DATA = [
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
-    title: "Concurrency — Executors, Locks & CompletableFuture",
+    title: "Concurrency — Executors, Thread Pools, Locks, CompletableFuture & Virtual Threads",
     estimatedTime: "4–5 hrs",
     topics: [
       {
@@ -301,24 +309,26 @@ const CURRICULUM_DATA = [
         category: "Java",
         subtopics: [
           { id: "d9_t1_s1", label: "ExecutorService — FixedThreadPool, CachedThreadPool, ScheduledExecutor, SingleThread; shutdown() vs shutdownNow()" },
+          { id: "d9_t4_s1", label: "ThreadPoolExecutor internals — corePoolSize, maxPoolSize, work queue, keepAlive, rejection policies; sizing CPU-bound vs I/O-bound pools" },
           { id: "d9_t1_s2", label: "Future<T> — submit(), get() blocks the calling thread; isDone(), cancel(), limitations" },
           { id: "d9_t1_s3", label: "CompletableFuture — thenApply, thenAccept, thenCombine, exceptionally, allOf/anyOf (non-blocking)" },
           { id: "d9_t1_s4", label: "ReentrantLock vs synchronized — tryLock(timeout), lockInterruptibly(), fairness, Condition objects" },
           { id: "d9_t1_s5", label: "ReadWriteLock, StampedLock — optimistic reads for read-heavy workloads" },
           { id: "d9_t1_s6", label: "Atomic classes: AtomicInteger, AtomicReference, CAS operations; LongAdder for high contention" },
           { id: "d9_t1_s7", label: "CountDownLatch (one-time barrier), CyclicBarrier (reusable), Semaphore (permits) — differences" },
-          { id: "d9_t1_s8", label: "Parallel streams — ForkJoinPool, when to use; shared mutable state pitfalls" }
+          { id: "d9_t1_s8", label: "Parallel streams — ForkJoinPool, when to use; shared mutable state pitfalls" },
+          { id: "d9_t4_s2", label: "Virtual threads (Java 21) — cheap threads for blocking I/O, Executors.newVirtualThreadPerTaskExecutor(), pinning pitfalls; vs platform threads" }
         ]
       },
       {
-        name: "DSA — Stacks & Queues",
+        name: "DSA — Two Pointers: Medium",
         category: "DSA",
         subtopics: [
-          { id: "d9_t2_s1", label: "Solve: Min Stack — O(1) getMin() using auxiliary stack" },
-          { id: "d9_t2_s2", label: "Solve: Implement Queue using Stacks" },
-          { id: "d9_t2_s3", label: "Solve: Evaluate Reverse Polish Notation" },
-          { id: "d9_t2_s4", label: "Solve: Daily Temperatures (monotonic stack intro)" },
-          { id: "d9_t2_s5", label: "Solve: Next Greater Element I" }
+          { id: "d15_t2_s1", label: "Solve: 3Sum (sort + two pointers, skip duplicates)" },
+          { id: "d15_t2_s2", label: "Solve: Container With Most Water" },
+          { id: "d15_t2_s3", label: "Solve: Sort Colors (Dutch National Flag — 3-way partition)" },
+          { id: "d15_t2_s4", label: "Solve: Trapping Rain Water (two-pointer approach)" },
+          { id: "d15_t2_s5", label: "Solve: Longest Substring Without Repeating Characters (sliding window intro)" }
         ]
       }
     ]
@@ -328,11 +338,11 @@ const CURRICULUM_DATA = [
     phase: "Phase 1: Core Java",
     phaseRange: "Days 1–10",
     categories: ["Java", "DSA"],
-    title: "SOLID Principles, GC & Phase 1 Review",
+    title: "SOLID Principles, Reflection & Annotations + Phase 1 Review",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Java — Design Principles & GC",
+        name: "Java — SOLID, Reflection & Annotations",
         category: "Java",
         subtopics: [
           { id: "d10_t1_s1", label: "S — Single Responsibility: one reason to change per class; refactoring God classes" },
@@ -340,20 +350,21 @@ const CURRICULUM_DATA = [
           { id: "d10_t1_s3", label: "L — Liskov Substitution: subtypes must be substitutable; Rectangle-Square problem" },
           { id: "d10_t1_s4", label: "I — Interface Segregation: small, focused interfaces; don't force clients to depend on unused methods" },
           { id: "d10_t1_s5", label: "D — Dependency Inversion: depend on abstractions (List<T>) not concretions (ArrayList<T>)" },
-          { id: "d10_t1_s6", label: "GC algorithms: G1 (default Java 9+), ZGC (low-latency); tuning: -Xms, -Xmx, -XX:+UseG1GC" },
-          { id: "d10_t1_s7", label: "Memory leaks — static collections, unclosed resources, inner classes holding outer reference" },
+          { id: "d10_t4_s1", label: "Reflection — Class objects, getDeclaredFields/Methods, setAccessible; performance cost and risks; how frameworks use it" },
+          { id: "d10_t4_s2", label: "Annotations — built-in (@Override, @FunctionalInterface, @Deprecated), custom annotations, @Retention & @Target, reading them at runtime" },
+          { id: "d10_t4_s3", label: "Dynamic proxies — java.lang.reflect.Proxy vs CGLIB subclassing; the basis of Spring AOP and @Transactional" },
           { id: "d10_t1_s8", label: "Phase 1 rapid-fire review: explain all OOP, Java 8, threading concepts from memory" }
         ]
       },
       {
-        name: "DSA — Binary Search: Easy",
+        name: "DSA — Sliding Window",
         category: "DSA",
         subtopics: [
-          { id: "d10_t2_s1", label: "Binary search template — iterative: left/right pointers, while(left <= right)" },
-          { id: "d10_t2_s2", label: "Solve: Binary Search (basic — find target in sorted array)" },
-          { id: "d10_t2_s3", label: "Solve: Search Insert Position" },
-          { id: "d10_t2_s4", label: "Solve: First Bad Version" },
-          { id: "d10_t2_s5", label: "Solve: Sqrt(x) using binary search" }
+          { id: "d16_t2_s1", label: "Sliding window template — fixed-size vs variable-size; expand/shrink pattern" },
+          { id: "d16_t2_s2", label: "Solve: Maximum Sum Subarray of Size K (fixed window)" },
+          { id: "d16_t2_s3", label: "Solve: Minimum Size Subarray Sum (variable window)" },
+          { id: "d16_t2_s4", label: "Solve: Permutation in String (frequency map + window)" },
+          { id: "d16_t2_s5", label: "Solve: Maximum Subarray (Kadane's Algorithm — DP/greedy)" }
         ]
       }
     ]
@@ -373,25 +384,27 @@ const CURRICULUM_DATA = [
         category: "Java",
         subtopics: [
           { id: "d11_t1_s1", label: "Collection hierarchy — Iterable → Collection → List, Set, Queue; Map is separate" },
+          { id: "d17_t1_s4", label: "Iterable vs Iterator — for-each requires Iterable; ListIterator for bidirectional traversal" },
           { id: "d11_t1_s2", label: "ArrayList internals — dynamic Object[] array, default capacity 10, grows by 1.5x; ensureCapacity()" },
           { id: "d11_t1_s3", label: "ArrayList time complexity — get O(1), add at end O(1) amortized, add in middle O(n), remove O(n)" },
           { id: "d11_t1_s4", label: "LinkedList — doubly-linked; addFirst/addLast O(1), get(index) O(n); implements both List and Deque" },
           { id: "d11_t1_s5", label: "ArrayList vs LinkedList — cache locality, memory overhead (node pointers), when to choose each" },
           { id: "d11_t1_s6", label: "Thread-safety: Collections.synchronizedList() vs CopyOnWriteArrayList vs Vector (legacy, avoid)" },
-          { id: "d11_t1_s7", label: "ConcurrentModificationException — fail-fast iterators, use Iterator.remove() or removeIf()" },
+          { id: "d11_t1_s7", label: "ConcurrentModificationException — fail-fast iterators (modCount) vs fail-safe/snapshot iterators (CopyOnWriteArrayList, concurrent collections); fix with Iterator.remove() or removeIf()" },
           { id: "d11_t1_s8", label: "Arrays.asList() (fixed-size, set OK, add/remove not) vs List.of() (Java 9, fully immutable, no nulls)" },
           { id: "d11_t1_s9", label: "subList() returns a view — structural modification on original causes exception; copy with new ArrayList<>()" }
         ]
       },
       {
-        name: "DSA — Binary Search: Medium",
+        name: "DSA — Prefix Sum & Hashing Patterns",
         category: "DSA",
         subtopics: [
-          { id: "d11_t2_s1", label: "Solve: Find First and Last Position of Element in Sorted Array" },
-          { id: "d11_t2_s2", label: "Solve: Search in Rotated Sorted Array" },
-          { id: "d11_t2_s3", label: "Solve: Find Minimum in Rotated Sorted Array" },
-          { id: "d11_t2_s4", label: "Solve: Koko Eating Bananas (binary search on answer)" },
-          { id: "d11_t2_s5", label: "Solve: Find Peak Element" }
+          { id: "d11_t3_s1", label: "Prefix sum pattern — prefix[i] = sum of the first i elements; any range sum in O(1); prefix sums + HashMap of earlier sums" },
+          { id: "d11_t3_s2", label: "Solve: Running Sum of 1d Array & Find Pivot Index" },
+          { id: "d11_t3_s3", label: "Solve: Range Sum Query - Immutable" },
+          { id: "d29_t2_s1", label: "Solve: Product of Array Except Self (prefix × suffix products)" },
+          { id: "d29_t2_s3", label: "Solve: Subarray Sum Equals K (prefix sum + HashMap)" },
+          { id: "d29_t2_s2", label: "Solve: Longest Consecutive Sequence (HashSet)" }
         ]
       }
     ]
@@ -413,21 +426,21 @@ const CURRICULUM_DATA = [
           { id: "d12_t1_s3", label: "hashCode() + equals() contract — MUST override both; equal objects MUST have same hashCode" },
           { id: "d12_t1_s4", label: "Load factor (0.75 default) — when size > capacity × loadFactor, capacity doubles, all entries rehash" },
           { id: "d12_t1_s5", label: "Worst-case: O(n) in Java 7, O(log n) in Java 8+ with treeified buckets" },
-          { id: "d12_t1_s6", label: "null key — HashMap allows 1 null key (stored at index 0); ConcurrentHashMap & TreeMap do NOT allow nulls" },
+          { id: "d12_t1_s6", label: "null handling — HashMap allows one null key (bucket 0) and null values; ConcurrentHashMap allows neither; TreeMap allows null values but not a null key under natural ordering" },
           { id: "d12_t1_s7", label: "Mutable keys danger — if hashCode() changes after put(), entry becomes unretrievable forever" },
           { id: "d12_t1_s8", label: "HashMap vs LinkedHashMap (insertion/access order) vs TreeMap (sorted by key, O(log n))" },
           { id: "d12_t1_s9", label: "Map.Entry iteration: entrySet() (most efficient) vs keySet() + get() (two lookups); forEach with lambda" }
         ]
       },
       {
-        name: "DSA — Trees: Easy (Introduction)",
+        name: "DSA — Linked List: Easy",
         category: "DSA",
         subtopics: [
-          { id: "d12_t2_s1", label: "Binary tree fundamentals — nodes, root, leaf, height, depth; how tree differs from linked list" },
-          { id: "d12_t2_s2", label: "Tree traversals — Inorder, Preorder, Postorder (recursive first, then iterative)" },
-          { id: "d12_t2_s3", label: "Solve: Maximum Depth of Binary Tree" },
-          { id: "d12_t2_s4", label: "Solve: Invert Binary Tree" },
-          { id: "d12_t2_s5", label: "Solve: Same Tree / Symmetric Tree" }
+          { id: "d7_t2_s1", label: "Singly linked list — node structure, traversal, insertion at head/tail" },
+          { id: "d7_t2_s2", label: "Solve: Reverse Linked List (iterative — prev/curr/next pointers)" },
+          { id: "d7_t2_s3", label: "Solve: Middle of Linked List (slow & fast pointers)" },
+          { id: "d7_t2_s4", label: "Solve: Merge Two Sorted Lists" },
+          { id: "d7_t2_s5", label: "Solve: Remove Duplicates from Sorted List" }
         ]
       }
     ]
@@ -455,14 +468,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Trees: Level Order & BST",
+        name: "DSA — Linked List: Medium & Stacks Intro",
         category: "DSA",
         subtopics: [
-          { id: "d13_t2_s1", label: "Solve: Level Order Traversal (BFS with Queue)" },
-          { id: "d13_t2_s2", label: "Solve: Validate Binary Search Tree" },
-          { id: "d13_t2_s3", label: "Solve: Lowest Common Ancestor of a BST" },
-          { id: "d13_t2_s4", label: "Solve: Kth Smallest Element in a BST" },
-          { id: "d13_t2_s5", label: "Solve: Binary Tree Right Side View" }
+          { id: "d8_t2_s1", label: "Solve: Linked List Cycle Detection (Floyd's Tortoise & Hare)" },
+          { id: "d8_t2_s2", label: "Solve: Remove Nth Node From End of List" },
+          { id: "d8_t2_s3", label: "Solve: Palindrome Linked List" },
+          { id: "d8_t2_s4", label: "Stack basics — LIFO, push, pop, peek; Java Stack class vs ArrayDeque" },
+          { id: "d8_t2_s5", label: "Solve: Valid Parentheses (stack)" }
         ]
       }
     ]
@@ -485,19 +498,18 @@ const CURRICULUM_DATA = [
           { id: "d14_t1_s4", label: "Set operations: union (addAll), intersection (retainAll), difference (removeAll) — mutate copies only" },
           { id: "d14_t1_s5", label: "TreeSet comparator caveat — compareTo returns 0 means 'equal' (deduplication trap!)" },
           { id: "d14_t1_s6", label: "NavigableSet — floor, ceiling, lower, higher, pollFirst, pollLast, descendingSet" },
-          { id: "d14_t1_s7", label: "CopyOnWriteArraySet — thread-safe, copy on every write; good for read-heavy small sets" },
-          { id: "d14_t1_s8", label: "Comparable vs Comparator — natural ordering vs external; Comparator.comparing().thenComparing() chains" }
+          { id: "d14_t1_s7", label: "CopyOnWriteArraySet — thread-safe, copy on every write; good for read-heavy small sets" }
         ]
       },
       {
-        name: "DSA — Trees: Medium Problems",
+        name: "DSA — Stacks & Queues",
         category: "DSA",
         subtopics: [
-          { id: "d14_t2_s1", label: "Solve: Lowest Common Ancestor of Binary Tree (not BST)" },
-          { id: "d14_t2_s2", label: "Solve: Diameter of Binary Tree" },
-          { id: "d14_t2_s3", label: "Solve: Path Sum II (root-to-leaf paths summing to target)" },
-          { id: "d14_t2_s4", label: "Solve: Convert Sorted Array to Balanced BST" },
-          { id: "d14_t2_s5", label: "Solve: Construct Binary Tree from Preorder and Inorder" }
+          { id: "d9_t2_s1", label: "Solve: Min Stack — O(1) getMin() using auxiliary stack" },
+          { id: "d9_t2_s2", label: "Solve: Implement Queue using Stacks" },
+          { id: "d9_t2_s3", label: "Solve: Evaluate Reverse Polish Notation" },
+          { id: "d9_t2_s4", label: "Solve: Daily Temperatures (monotonic stack intro)" },
+          { id: "d9_t2_s5", label: "Solve: Next Greater Element I" }
         ]
       }
     ]
@@ -520,19 +532,18 @@ const CURRICULUM_DATA = [
           { id: "d15_t1_s4", label: "PriorityQueue with custom Comparator: new PriorityQueue<>(Comparator.comparing(Task::getPriority))" },
           { id: "d15_t1_s5", label: "BlockingQueue — ArrayBlockingQueue (bounded), LinkedBlockingQueue; put() blocks if full, take() blocks if empty" },
           { id: "d15_t1_s6", label: "Producer-Consumer with BlockingQueue — no manual synchronization needed; standard thread pool pattern" },
-          { id: "d15_t1_s7", label: "ConcurrentLinkedQueue — non-blocking CAS-based queue; ConcurrentSkipListMap (concurrent sorted map)" },
-          { id: "d15_t1_s8", label: "Fail-fast vs fail-safe iterators — modCount check vs snapshot iteration (CopyOnWriteArrayList)" }
+          { id: "d15_t1_s7", label: "ConcurrentLinkedQueue — non-blocking CAS-based queue; ConcurrentSkipListMap (concurrent sorted map)" }
         ]
       },
       {
-        name: "DSA — Two Pointers: Medium",
+        name: "DSA — Binary Search: Easy",
         category: "DSA",
         subtopics: [
-          { id: "d15_t2_s1", label: "Solve: 3Sum (sort + two pointers, skip duplicates)" },
-          { id: "d15_t2_s2", label: "Solve: Container With Most Water" },
-          { id: "d15_t2_s3", label: "Solve: Sort Colors (Dutch National Flag — 3-way partition)" },
-          { id: "d15_t2_s4", label: "Solve: Trapping Rain Water (two-pointer approach)" },
-          { id: "d15_t2_s5", label: "Solve: Longest Substring Without Repeating Characters (sliding window intro)" }
+          { id: "d10_t2_s1", label: "Binary search template — iterative: left/right pointers, while(left <= right)" },
+          { id: "d10_t2_s2", label: "Solve: Binary Search (basic — find target in sorted array)" },
+          { id: "d10_t2_s3", label: "Solve: Search Insert Position" },
+          { id: "d10_t2_s4", label: "Solve: First Bad Version" },
+          { id: "d10_t2_s5", label: "Solve: Sqrt(x) using binary search" }
         ]
       }
     ]
@@ -542,32 +553,35 @@ const CURRICULUM_DATA = [
     phase: "Phase 2: Collections",
     phaseRange: "Days 11–18",
     categories: ["Java", "DSA"],
-    title: "Collections Utility, Immutability & Stream Integration",
+    title: "Collections Utilities, Immutability & Advanced Collections",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Collections — Utilities & Integration",
+        name: "Collections — Utilities & Advanced",
         category: "Java",
         subtopics: [
           { id: "d16_t1_s1", label: "Collections.sort() uses TimSort — O(n log n), stable; list.sort(null) uses Comparable" },
           { id: "d16_t1_s2", label: "Collections.binarySearch() — list MUST be sorted; returns -(insertionPoint)-1 if not found" },
           { id: "d16_t1_s3", label: "Immutable collections: List.of(), Set.of(), Map.of() (Java 9+) — no nulls, throw on mutation" },
           { id: "d16_t1_s4", label: "Collections.unmodifiableList() vs List.copyOf() — view vs true immutable copy" },
-          { id: "d16_t1_s5", label: "Stream + Collections: groupingBy, partitioningBy, toMap with merge function for duplicate keys" },
           { id: "d16_t1_s6", label: "Finding duplicates: Set.add() returns false for existing elements — O(n) time pattern" },
           { id: "d16_t1_s7", label: "Sort Map by value: stream → sorted(Map.Entry.comparingByValue()) → collect to LinkedHashMap" },
-          { id: "d16_t1_s8", label: "Efficient intersection: convert one list to HashSet → filter with contains() — O(n+m) vs O(n×m)" }
+          { id: "d16_t1_s8", label: "Efficient intersection: convert one list to HashSet → filter with contains() — O(n+m) vs O(n×m)" },
+          { id: "d17_t1_s1", label: "BitSet — memory-efficient boolean set; and(), or(), xor(), cardinality(); use for Sieve, bloom filters" },
+          { id: "d17_t1_s2", label: "IdentityHashMap — uses == (reference equality) instead of equals(); for object graph traversal" },
+          { id: "d17_t1_s5", label: "PriorityBlockingQueue — thread-safe, unbounded, blocking take(); DelayQueue for scheduled tasks" },
+          { id: "d17_t1_s6", label: "Collections interview patterns — HashMap for LRU, TreeMap for sorted ranges, PriorityQueue for Top-K" }
         ]
       },
       {
-        name: "DSA — Sliding Window",
+        name: "DSA — Binary Search: Medium",
         category: "DSA",
         subtopics: [
-          { id: "d16_t2_s1", label: "Sliding window template — fixed-size vs variable-size; expand/shrink pattern" },
-          { id: "d16_t2_s2", label: "Solve: Maximum Sum Subarray of Size K (fixed window)" },
-          { id: "d16_t2_s3", label: "Solve: Minimum Size Subarray Sum (variable window)" },
-          { id: "d16_t2_s4", label: "Solve: Permutation in String (frequency map + window)" },
-          { id: "d16_t2_s5", label: "Solve: Maximum Subarray (Kadane's Algorithm — DP/greedy)" }
+          { id: "d11_t2_s1", label: "Solve: Find First and Last Position of Element in Sorted Array" },
+          { id: "d11_t2_s2", label: "Solve: Search in Rotated Sorted Array" },
+          { id: "d11_t2_s3", label: "Solve: Find Minimum in Rotated Sorted Array" },
+          { id: "d11_t2_s4", label: "Solve: Koko Eating Bananas (binary search on answer)" },
+          { id: "d11_t2_s5", label: "Solve: Find Peak Element" }
         ]
       }
     ]
@@ -577,32 +591,32 @@ const CURRICULUM_DATA = [
     phase: "Phase 2: Collections",
     phaseRange: "Days 11–18",
     categories: ["Java", "DSA"],
-    title: "Advanced Collections — BitSet, IdentityHashMap & Interview Patterns",
+    title: "JVM Internals — Class Loading, Memory, GC & Profiling",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Collections — Advanced & Niche",
+        name: "Java — JVM Internals, GC & Performance",
         category: "Java",
         subtopics: [
-          { id: "d17_t1_s1", label: "BitSet — memory-efficient boolean set; and(), or(), xor(), cardinality(); use for Sieve, bloom filters" },
-          { id: "d17_t1_s2", label: "IdentityHashMap — uses == (reference equality) instead of equals(); for object graph traversal" },
-          { id: "d17_t1_s3", label: "Collections.frequency(), Collections.disjoint(), Collections.nCopies(), Collections.rotate()" },
-          { id: "d17_t1_s4", label: "Iterable vs Iterator — for-each requires Iterable; ListIterator for bidirectional traversal" },
-          { id: "d17_t1_s5", label: "PriorityBlockingQueue — thread-safe, unbounded, blocking take(); DelayQueue for scheduled tasks" },
-          { id: "d17_t1_s6", label: "Collections interview patterns — HashMap for LRU, TreeMap for sorted ranges, PriorityQueue for Top-K" },
-          { id: "d17_t1_s7", label: "Practice: whiteboard HashMap put/get flow including treeification" },
-          { id: "d17_t1_s8", label: "Practice: answer 10 random collections questions without notes" }
+          { id: "d7_t1_s8", label: "JVM Architecture — Stack (per thread) vs Heap (shared), Method Area, GC Roots, String Pool location" },
+          { id: "d17_t4_s1", label: "Class loading — Bootstrap, Platform & Application class loaders; parent-delegation model; loading → linking → initialization" },
+          { id: "d17_t4_s2", label: "Execution engine — bytecode, interpreter vs JIT (C1/C2, tiered compilation); why Java code gets faster after warm-up" },
+          { id: "d17_t4_s3", label: "Heap generations — Eden, Survivor, Old; minor vs major/full GC; promotion, GC roots and reachability" },
+          { id: "d10_t1_s6", label: "GC algorithms: G1 (default Java 9+), ZGC (low-latency); tuning: -Xms, -Xmx, -XX:+UseG1GC" },
+          { id: "d10_t1_s7", label: "Memory leaks — static collections, unclosed resources, inner classes holding outer reference" },
+          { id: "d17_t4_s4", label: "OutOfMemoryError types — Java heap space, Metaspace, GC overhead limit exceeded, unable to create native thread; StackOverflowError" },
+          { id: "d17_t4_s5", label: "Diagnosing production issues — jstack thread dumps, jmap/jcmd heap dumps, JFR + Mission Control, VisualVM" }
         ]
       },
       {
-        name: "DSA — Heaps / Priority Queues",
+        name: "DSA — Bit Manipulation & Math",
         category: "DSA",
         subtopics: [
-          { id: "d17_t2_s1", label: "Heap fundamentals — min-heap property, max-heap, complete binary tree stored in array" },
-          { id: "d17_t2_s2", label: "Solve: Kth Largest Element in an Array (min-heap of size K)" },
-          { id: "d17_t2_s3", label: "Solve: Top K Frequent Elements" },
-          { id: "d17_t2_s4", label: "Solve: Merge K Sorted Lists (min-heap approach)" },
-          { id: "d17_t2_s5", label: "Solve: Last Stone Weight" }
+          { id: "d28_t2_s1", label: "Bitwise ops: AND, OR, XOR, NOT, left/right shifts — XOR tricks for problems" },
+          { id: "d28_t2_s2", label: "Solve: Single Number (XOR all elements)" },
+          { id: "d28_t2_s3", label: "Solve: Number of 1 Bits / Counting Bits" },
+          { id: "d28_t2_s4", label: "Solve: Missing Number (XOR or sum approach)" },
+          { id: "d28_t2_s5", label: "Solve: Pow(x, n) — fast exponentiation O(log n)" }
         ]
       }
     ]
@@ -612,11 +626,11 @@ const CURRICULUM_DATA = [
     phase: "Phase 2: Collections",
     phaseRange: "Days 11–18",
     categories: ["Java", "DSA"],
-    title: "Phase 2 Review — Collections Rapid-Fire & Graph Intro",
+    title: "Phase 2 Review — Collections & JVM Rapid-Fire + Trees Intro",
     estimatedTime: "3–4 hrs",
     topics: [
       {
-        name: "Collections — Final Review",
+        name: "Collections & JVM — Final Review",
         category: "Java",
         subtopics: [
           { id: "d18_t1_s1", label: "Whiteboard: HashMap put/get flow including hash, index, collision, treeification" },
@@ -624,18 +638,19 @@ const CURRICULUM_DATA = [
           { id: "d18_t1_s3", label: "Whiteboard: LinkedHashMap as LRU Cache with removeEldestEntry()" },
           { id: "d18_t1_s4", label: "Explain: ArrayList vs LinkedList vs CopyOnWriteArrayList — when to use each" },
           { id: "d18_t1_s5", label: "Explain: PriorityQueue for Top-K, BlockingQueue for producer-consumer" },
+          { id: "d18_t4_s1", label: "Explain: JVM memory areas, class loading and how GC decides what to collect" },
           { id: "d18_t1_s6", label: "Rapid-fire: answer 15 random Q&A from all collection topics without notes" }
         ]
       },
       {
-        name: "DSA — Graphs Introduction",
+        name: "DSA — Trees: Easy (Introduction)",
         category: "DSA",
         subtopics: [
-          { id: "d18_t2_s1", label: "Graph fundamentals — vertices, edges, directed/undirected, weighted/unweighted" },
-          { id: "d18_t2_s2", label: "Graph representations — adjacency list vs adjacency matrix; when to use each" },
-          { id: "d18_t2_s3", label: "BFS — queue-based level-by-level traversal; shortest path in unweighted graph" },
-          { id: "d18_t2_s4", label: "DFS — stack/recursion-based deep traversal; cycle detection" },
-          { id: "d18_t2_s5", label: "Solve: Number of Islands (BFS/DFS on grid)" }
+          { id: "d12_t2_s1", label: "Binary tree fundamentals — nodes, root, leaf, height, depth; how tree differs from linked list" },
+          { id: "d12_t2_s2", label: "Tree traversals — Inorder, Preorder, Postorder (recursive first, then iterative)" },
+          { id: "d12_t2_s3", label: "Solve: Maximum Depth of Binary Tree" },
+          { id: "d12_t2_s4", label: "Solve: Invert Binary Tree" },
+          { id: "d12_t2_s5", label: "Solve: Same Tree / Symmetric Tree" }
         ]
       }
     ]
@@ -665,14 +680,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Graphs: Medium",
+        name: "DSA — Trees: Level Order & BST",
         category: "DSA",
         subtopics: [
-          { id: "d19_t2_s1", label: "Solve: Clone Graph (DFS + HashMap for visited)" },
-          { id: "d19_t2_s2", label: "Solve: Rotten Oranges (multi-source BFS)" },
-          { id: "d19_t2_s3", label: "Solve: Course Schedule (Topological Sort — Kahn's BFS)" },
-          { id: "d19_t2_s4", label: "Solve: Course Schedule II (return ordering)" },
-          { id: "d19_t2_s5", label: "Solve: Pacific Atlantic Water Flow" }
+          { id: "d13_t2_s1", label: "Solve: Level Order Traversal (BFS with Queue)" },
+          { id: "d13_t2_s2", label: "Solve: Validate Binary Search Tree" },
+          { id: "d13_t2_s3", label: "Solve: Lowest Common Ancestor of a BST" },
+          { id: "d13_t2_s4", label: "Solve: Kth Smallest Element in a BST" },
+          { id: "d13_t2_s5", label: "Solve: Binary Tree Right Side View" }
         ]
       }
     ]
@@ -700,14 +715,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Backtracking: Easy→Medium",
+        name: "DSA — Trees: Medium Problems",
         category: "DSA",
         subtopics: [
-          { id: "d20_t2_s1", label: "Backtracking framework — choose → explore → unchoose; decision tree visualization" },
-          { id: "d20_t2_s2", label: "Solve: Subsets (power set generation)" },
-          { id: "d20_t2_s3", label: "Solve: Permutations" },
-          { id: "d20_t2_s4", label: "Solve: Combination Sum" },
-          { id: "d20_t2_s5", label: "Solve: Letter Combinations of a Phone Number" }
+          { id: "d14_t2_s1", label: "Solve: Lowest Common Ancestor of Binary Tree (not BST)" },
+          { id: "d14_t2_s2", label: "Solve: Diameter of Binary Tree" },
+          { id: "d14_t2_s3", label: "Solve: Path Sum II (root-to-leaf paths summing to target)" },
+          { id: "d14_t2_s4", label: "Solve: Convert Sorted Array to Balanced BST" },
+          { id: "d14_t2_s5", label: "Solve: Construct Binary Tree from Preorder and Inorder" }
         ]
       }
     ]
@@ -735,14 +750,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Dynamic Programming: Easy",
+        name: "DSA — Heaps / Priority Queues",
         category: "DSA",
         subtopics: [
-          { id: "d21_t2_s1", label: "DP fundamentals — overlapping subproblems, optimal substructure; memoization (top-down) vs tabulation (bottom-up)" },
-          { id: "d21_t2_s2", label: "Solve: Climbing Stairs (Fibonacci pattern)" },
-          { id: "d21_t2_s3", label: "Solve: House Robber" },
-          { id: "d21_t2_s4", label: "Solve: Min Cost Climbing Stairs" },
-          { id: "d21_t2_s5", label: "Solve: Fibonacci Number (recursive → memo → tabulation → space-optimized)" }
+          { id: "d17_t2_s1", label: "Heap fundamentals — min-heap property, max-heap, complete binary tree stored in array" },
+          { id: "d17_t2_s2", label: "Solve: Kth Largest Element in an Array (min-heap of size K)" },
+          { id: "d17_t2_s3", label: "Solve: Top K Frequent Elements" },
+          { id: "d17_t2_s4", label: "Solve: Merge K Sorted Lists (min-heap approach)" },
+          { id: "d17_t2_s5", label: "Solve: Last Stone Weight" }
         ]
       }
     ]
@@ -769,14 +784,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Dynamic Programming: Medium (1D)",
+        name: "DSA — Graphs Introduction",
         category: "DSA",
         subtopics: [
-          { id: "d22_t2_s1", label: "Solve: Coin Change (minimum coins — unbounded knapsack variant)" },
-          { id: "d22_t2_s2", label: "Solve: Longest Increasing Subsequence" },
-          { id: "d22_t2_s3", label: "Solve: Word Break" },
-          { id: "d22_t2_s4", label: "Solve: Decode Ways" },
-          { id: "d22_t2_s5", label: "Solve: Maximum Product Subarray" }
+          { id: "d18_t2_s1", label: "Graph fundamentals — vertices, edges, directed/undirected, weighted/unweighted" },
+          { id: "d18_t2_s2", label: "Graph representations — adjacency list vs adjacency matrix; when to use each" },
+          { id: "d18_t2_s3", label: "BFS — queue-based level-by-level traversal; shortest path in unweighted graph" },
+          { id: "d18_t2_s4", label: "DFS — stack/recursion-based deep traversal; cycle detection" },
+          { id: "d18_t2_s5", label: "Solve: Number of Islands (BFS/DFS on grid)" }
         ]
       }
     ]
@@ -804,14 +819,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Dynamic Programming: Medium (2D)",
+        name: "DSA — Graphs: Medium",
         category: "DSA",
         subtopics: [
-          { id: "d23_t2_s1", label: "Solve: Longest Common Subsequence (2D table)" },
-          { id: "d23_t2_s2", label: "Solve: Edit Distance (Levenshtein)" },
-          { id: "d23_t2_s3", label: "Solve: Unique Paths (grid DP)" },
-          { id: "d23_t2_s4", label: "Solve: 0/1 Knapsack & Partition Equal Subset Sum" },
-          { id: "d23_t2_s5", label: "Solve: Target Sum" }
+          { id: "d19_t2_s1", label: "Solve: Clone Graph (DFS + HashMap for visited)" },
+          { id: "d19_t2_s2", label: "Solve: Rotten Oranges (multi-source BFS)" },
+          { id: "d19_t2_s3", label: "Solve: Course Schedule (Topological Sort — Kahn's BFS)" },
+          { id: "d19_t2_s4", label: "Solve: Course Schedule II (return ordering)" },
+          { id: "d19_t2_s5", label: "Solve: Pacific Atlantic Water Flow" }
         ]
       }
     ]
@@ -839,14 +854,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Greedy Algorithms",
+        name: "DSA — Backtracking: Easy→Medium",
         category: "DSA",
         subtopics: [
-          { id: "d24_t2_s1", label: "Greedy choice property — locally optimal → globally optimal; when greedy works vs DP needed" },
-          { id: "d24_t2_s2", label: "Solve: Jump Game" },
-          { id: "d24_t2_s3", label: "Solve: Gas Station" },
-          { id: "d24_t2_s4", label: "Solve: Merge Intervals" },
-          { id: "d24_t2_s5", label: "Solve: Non-overlapping Intervals" }
+          { id: "d20_t2_s1", label: "Backtracking framework — choose → explore → unchoose; decision tree visualization" },
+          { id: "d20_t2_s2", label: "Solve: Subsets (power set generation)" },
+          { id: "d20_t2_s3", label: "Solve: Permutations" },
+          { id: "d20_t2_s4", label: "Solve: Combination Sum" },
+          { id: "d20_t2_s5", label: "Solve: Letter Combinations of a Phone Number" }
         ]
       }
     ]
@@ -874,14 +889,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Intervals & Matrix",
+        name: "DSA — Dynamic Programming: Easy",
         category: "DSA",
         subtopics: [
-          { id: "d25_t2_s1", label: "Solve: Insert Interval" },
-          { id: "d25_t2_s2", label: "Solve: Meeting Rooms II (min heaps for overlapping)" },
-          { id: "d25_t2_s3", label: "Solve: Spiral Matrix" },
-          { id: "d25_t2_s4", label: "Solve: Rotate Image (90° rotation in-place)" },
-          { id: "d25_t2_s5", label: "Solve: Set Matrix Zeroes" }
+          { id: "d21_t2_s1", label: "DP fundamentals — overlapping subproblems, optimal substructure; memoization (top-down) vs tabulation (bottom-up)" },
+          { id: "d21_t2_s2", label: "Solve: Climbing Stairs (Fibonacci pattern)" },
+          { id: "d21_t2_s3", label: "Solve: House Robber" },
+          { id: "d21_t2_s4", label: "Solve: Min Cost Climbing Stairs" },
+          { id: "d21_t2_s5", label: "Solve: Fibonacci Number (recursive → memo → tabulation → space-optimized)" }
         ]
       }
     ]
@@ -907,14 +922,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Trie & Advanced Trees",
+        name: "DSA — Dynamic Programming: Medium (1D)",
         category: "DSA",
         subtopics: [
-          { id: "d26_t2_s1", label: "Trie data structure — insert, search, startsWith; TrieNode with children HashMap" },
-          { id: "d26_t2_s2", label: "Solve: Implement Trie (Prefix Tree)" },
-          { id: "d26_t2_s3", label: "Solve: Design Add and Search Words (Trie + DFS for wildcard '.')" },
-          { id: "d26_t2_s4", label: "Solve: Find Median from Data Stream (two heaps)" },
-          { id: "d26_t2_s5", label: "Solve: Serialize and Deserialize Binary Tree" }
+          { id: "d22_t2_s1", label: "Solve: Coin Change (minimum coins — unbounded knapsack variant)" },
+          { id: "d22_t2_s2", label: "Solve: Longest Increasing Subsequence" },
+          { id: "d22_t2_s3", label: "Solve: Word Break" },
+          { id: "d22_t2_s4", label: "Solve: Decode Ways" },
+          { id: "d22_t2_s5", label: "Solve: Maximum Product Subarray" }
         ]
       }
     ]
@@ -943,14 +958,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Graphs: Advanced",
+        name: "DSA — Dynamic Programming: Medium (2D)",
         category: "DSA",
         subtopics: [
-          { id: "d27_t2_s1", label: "Union-Find (Disjoint Set) — path compression, union by rank; template implementation" },
-          { id: "d27_t2_s2", label: "Solve: Redundant Connection (Union-Find)" },
-          { id: "d27_t2_s3", label: "Solve: Graph Valid Tree (Union-Find)" },
-          { id: "d27_t2_s4", label: "Solve: Word Ladder (BFS shortest transformation)" },
-          { id: "d27_t2_s5", label: "Solve: Network Delay Time (Dijkstra's)" }
+          { id: "d23_t2_s1", label: "Solve: Longest Common Subsequence (2D table)" },
+          { id: "d23_t2_s2", label: "Solve: Edit Distance (Levenshtein)" },
+          { id: "d23_t2_s3", label: "Solve: Unique Paths (grid DP)" },
+          { id: "d23_t2_s4", label: "Solve: 0/1 Knapsack & Partition Equal Subset Sum" },
+          { id: "d23_t2_s5", label: "Solve: Target Sum" }
         ]
       }
     ]
@@ -977,14 +992,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Bit Manipulation & Math",
+        name: "DSA — Greedy Algorithms",
         category: "DSA",
         subtopics: [
-          { id: "d28_t2_s1", label: "Bitwise ops: AND, OR, XOR, NOT, left/right shifts — XOR tricks for problems" },
-          { id: "d28_t2_s2", label: "Solve: Single Number (XOR all elements)" },
-          { id: "d28_t2_s3", label: "Solve: Number of 1 Bits / Counting Bits" },
-          { id: "d28_t2_s4", label: "Solve: Missing Number (XOR or sum approach)" },
-          { id: "d28_t2_s5", label: "Solve: Pow(x, n) — fast exponentiation O(log n)" }
+          { id: "d24_t2_s1", label: "Greedy choice property — locally optimal → globally optimal; when greedy works vs DP needed" },
+          { id: "d24_t2_s2", label: "Solve: Jump Game" },
+          { id: "d24_t2_s3", label: "Solve: Gas Station" },
+          { id: "d24_t2_s4", label: "Solve: Merge Intervals" },
+          { id: "d24_t2_s5", label: "Solve: Non-overlapping Intervals" }
         ]
       }
     ]
@@ -993,7 +1008,7 @@ const CURRICULUM_DATA = [
     day: 29,
     phase: "Phase 4: Microservices",
     phaseRange: "Days 27–34",
-    categories: ["System Design", "Spring Boot"],
+    categories: ["System Design", "DSA"],
     title: "Resilience & Observability — Resilience4j, Tracing, Logging",
     estimatedTime: "3–4 hrs",
     topics: [
@@ -1011,14 +1026,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Mixed Medium Practice",
+        name: "DSA — Intervals & Matrix",
         category: "DSA",
         subtopics: [
-          { id: "d29_t2_s1", label: "Solve: Product of Array Except Self" },
-          { id: "d29_t2_s2", label: "Solve: Longest Consecutive Sequence" },
-          { id: "d29_t2_s3", label: "Solve: Subarray Sum Equals K (prefix sum + HashMap)" },
-          { id: "d29_t2_s4", label: "Solve: Encode and Decode Strings" },
-          { id: "d29_t2_s5", label: "Timed: solve 2 medium problems in 30 min" }
+          { id: "d25_t2_s1", label: "Solve: Insert Interval" },
+          { id: "d25_t2_s2", label: "Solve: Meeting Rooms II (min heaps for overlapping)" },
+          { id: "d25_t2_s3", label: "Solve: Spiral Matrix" },
+          { id: "d25_t2_s4", label: "Solve: Rotate Image (90° rotation in-place)" },
+          { id: "d25_t2_s5", label: "Solve: Set Matrix Zeroes" }
         ]
       }
     ]
@@ -1044,13 +1059,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Design-based Problems",
+        name: "DSA — Trie & Advanced Trees",
         category: "DSA",
         subtopics: [
-          { id: "d30_t2_s1", label: "Solve: LRU Cache (HashMap + Doubly Linked List)" },
-          { id: "d30_t2_s2", label: "Solve: Design HashMap from scratch (array of linked lists)" },
-          { id: "d30_t2_s3", label: "Solve: Insert Delete GetRandom O(1)" },
-          { id: "d30_t2_s4", label: "Solve: Time Based Key-Value Store" }
+          { id: "d26_t2_s1", label: "Trie data structure — insert, search, startsWith; TrieNode with children HashMap" },
+          { id: "d26_t2_s2", label: "Solve: Implement Trie (Prefix Tree)" },
+          { id: "d26_t2_s3", label: "Solve: Design Add and Search Words (Trie + DFS for wildcard '.')" },
+          { id: "d26_t2_s4", label: "Solve: Find Median from Data Stream (two heaps)" },
+          { id: "d26_t2_s5", label: "Solve: Serialize and Deserialize Binary Tree" }
         ]
       }
     ]
@@ -1076,13 +1092,14 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Hard Problem Intro",
+        name: "DSA — Graphs: Advanced",
         category: "DSA",
         subtopics: [
-          { id: "d31_t2_s1", label: "Solve: Largest Rectangle in Histogram (monotonic stack)" },
-          { id: "d31_t2_s2", label: "Solve: Trapping Rain Water (revision — stack approach)" },
-          { id: "d31_t2_s3", label: "Solve: Sliding Window Maximum (monotonic deque)" },
-          { id: "d31_t2_s4", label: "Solve: Longest Palindromic Substring (expand from center)" }
+          { id: "d27_t2_s1", label: "Union-Find (Disjoint Set) — path compression, union by rank; template implementation" },
+          { id: "d27_t2_s2", label: "Solve: Redundant Connection (Union-Find)" },
+          { id: "d27_t2_s3", label: "Solve: Graph Valid Tree (Union-Find)" },
+          { id: "d27_t2_s4", label: "Solve: Word Ladder (BFS shortest transformation)" },
+          { id: "d27_t2_s5", label: "Solve: Network Delay Time (Dijkstra's)" }
         ]
       }
     ]
@@ -1108,13 +1125,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Timed Interview Practice",
+        name: "DSA — Design-based Problems",
         category: "DSA",
         subtopics: [
-          { id: "d32_t2_s1", label: "Timed: solve 1 easy + 2 medium problems in 60 minutes" },
-          { id: "d32_t2_s2", label: "Practice thinking aloud — explain approach before coding" },
-          { id: "d32_t2_s3", label: "Practice edge cases: empty input, single element, large input, negative numbers" },
-          { id: "d32_t2_s4", label: "Time/space complexity analysis after each solution" }
+          { id: "d30_t2_s1", label: "Solve: LRU Cache (HashMap + Doubly Linked List)" },
+          { id: "d30_t2_s2", label: "Solve: Design HashMap from scratch (array of linked lists)" },
+          { id: "d30_t2_s3", label: "Solve: Insert Delete GetRandom O(1)" },
+          { id: "d30_t2_s4", label: "Solve: Time Based Key-Value Store" }
         ]
       }
     ]
@@ -1141,13 +1158,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — N-Queens & Hard Backtracking",
+        name: "DSA — Hard Problem Intro",
         category: "DSA",
         subtopics: [
-          { id: "d33_t2_s1", label: "Solve: N-Queens (constraint-based backtracking)" },
-          { id: "d33_t2_s2", label: "Solve: Word Search in Grid" },
-          { id: "d33_t2_s3", label: "Solve: Generate Parentheses" },
-          { id: "d33_t2_s4", label: "Solve: Palindrome Partitioning" }
+          { id: "d31_t2_s1", label: "Solve: Largest Rectangle in Histogram (monotonic stack)" },
+          { id: "d31_t2_s2", label: "Solve: Trapping Rain Water (revision — stack approach)" },
+          { id: "d31_t2_s3", label: "Solve: Sliding Window Maximum (monotonic deque)" },
+          { id: "d31_t2_s4", label: "Solve: Longest Palindromic Substring (expand from center)" }
         ]
       }
     ]
@@ -1173,13 +1190,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Hard DP Practice",
+        name: "DSA — N-Queens & Hard Backtracking",
         category: "DSA",
         subtopics: [
-          { id: "d34_t2_s1", label: "Solve: Regular Expression Matching (DP)" },
-          { id: "d34_t2_s2", label: "Solve: Longest Valid Parentheses" },
-          { id: "d34_t2_s3", label: "Solve: Burst Balloons (interval DP)" },
-          { id: "d34_t2_s4", label: "Timed: 1 hard problem in 40 minutes" }
+          { id: "d33_t2_s1", label: "Solve: N-Queens (constraint-based backtracking)" },
+          { id: "d33_t2_s2", label: "Solve: Word Search in Grid" },
+          { id: "d33_t2_s3", label: "Solve: Generate Parentheses" },
+          { id: "d33_t2_s4", label: "Solve: Palindrome Partitioning" }
         ]
       }
     ]
@@ -1272,13 +1289,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Mixed Practice",
+        name: "DSA — Hard DP Practice",
         category: "DSA",
         subtopics: [
-          { id: "d37_t2_s1", label: "Solve: Alien Dictionary (topological sort)" },
-          { id: "d37_t2_s2", label: "Solve: Accounts Merge (Union-Find)" },
-          { id: "d37_t2_s3", label: "Solve: Surrounded Regions (BFS/DFS from border)" },
-          { id: "d37_t2_s4", label: "Timed: solve 2 medium in 30 min" }
+          { id: "d34_t2_s1", label: "Solve: Regular Expression Matching (DP)" },
+          { id: "d34_t2_s2", label: "Solve: Longest Valid Parentheses" },
+          { id: "d34_t2_s3", label: "Solve: Burst Balloons (interval DP)" },
+          { id: "d34_t2_s4", label: "Timed: 1 hard problem in 40 minutes" }
         ]
       }
     ]
@@ -1305,13 +1322,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Timed Practice",
+        name: "DSA — Mixed Practice",
         category: "DSA",
         subtopics: [
-          { id: "d38_t2_s1", label: "Timed: solve 1 easy + 2 medium in 60 minutes" },
-          { id: "d38_t2_s2", label: "Solve: Design Twitter (OOP + data structures)" },
-          { id: "d38_t2_s3", label: "Solve: Flatten Nested List Iterator" },
-          { id: "d38_t2_s4", label: "Solve: Task Scheduler (heap + greedy)" }
+          { id: "d37_t2_s1", label: "Solve: Alien Dictionary (topological sort)" },
+          { id: "d37_t2_s2", label: "Solve: Accounts Merge (Union-Find)" },
+          { id: "d37_t2_s3", label: "Solve: Surrounded Regions (BFS/DFS from border)" },
+          { id: "d37_t2_s4", label: "Timed: solve 2 medium in 30 min" }
         ]
       }
     ]
@@ -1527,12 +1544,13 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Revision Sprint",
+        name: "DSA — Timed Practice",
         category: "DSA",
         subtopics: [
-          { id: "d46_t2_s1", label: "Solve 3 random medium problems from your Backlog/Missed list" },
-          { id: "d46_t2_s2", label: "Revise: LRU Cache, Trie, Union-Find from memory" },
-          { id: "d46_t2_s3", label: "Timed: 2 medium problems in 30 minutes" }
+          { id: "d38_t2_s1", label: "Timed: solve 1 easy + 2 medium in 60 minutes" },
+          { id: "d38_t2_s2", label: "Solve: Design Twitter (OOP + data structures)" },
+          { id: "d38_t2_s3", label: "Solve: Flatten Nested List Iterator" },
+          { id: "d38_t2_s4", label: "Solve: Task Scheduler (heap + greedy)" }
         ]
       }
     ]
@@ -1649,13 +1667,15 @@ const CURRICULUM_DATA = [
         ]
       },
       {
-        name: "DSA — Sorting Algorithms",
+        name: "DSA — Timed Interview Practice",
         category: "DSA",
         subtopics: [
-          { id: "d50_t2_s1", label: "Merge Sort — implementation, O(n log n), stable, O(n) space; when to use" },
-          { id: "d50_t2_s2", label: "Quick Sort — partition, average O(n log n), worst O(n²); pivot strategies" },
-          { id: "d50_t2_s3", label: "Solve: Sort Colors (Dutch National Flag)" },
-          { id: "d50_t2_s4", label: "Solve: Largest Number (custom comparator sort)" }
+          { id: "d32_t2_s1", label: "Timed: solve 1 easy + 2 medium problems in 60 minutes" },
+          { id: "d32_t2_s2", label: "Practice thinking aloud — explain approach before coding" },
+          { id: "d32_t2_s3", label: "Practice edge cases: empty input, single element, large input, negative numbers" },
+          { id: "d32_t2_s4", label: "Time/space complexity analysis after each solution" },
+          { id: "d29_t2_s4", label: "Solve: Encode and Decode Strings" },
+          { id: "d29_t2_s5", label: "Timed: solve 2 medium problems in 30 min" }
         ]
       }
     ]

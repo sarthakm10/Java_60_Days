@@ -496,7 +496,7 @@
             <span class="day-number">Day ${day.day} · ${day.phase.split(':')[0]}</span>
             ${statusIconHTML}
           </div>
-          <div class="day-title">${day.title}</div>
+          <div class="day-title">${escapeHTML(day.title)}</div>
           <div class="day-meta">
             <span class="day-time">${ICONS.clock} ${day.estimatedTime}</span>
             <div class="day-categories">${categoryTags}</div>
@@ -546,7 +546,7 @@
         return `
           <div class="subtopic-item ${isChecked ? 'checked' : ''} ${isHighlighted ? 'search-highlight' : ''}">
             <input type="checkbox" class="subtopic-checkbox" data-id="${sub.id}" ${isChecked ? 'checked' : ''}>
-            <label class="subtopic-label" data-id="${sub.id}">${sub.label}</label>
+            <label class="subtopic-label" data-id="${sub.id}">${escapeHTML(sub.label)}</label>
             ${noteIds.has(sub.id) ? `<button class="subtopic-notes-btn" data-id="${sub.id}" title="Read study notes for this subtopic">${ICONS.bookOpen}</button>` : ""}
           </div>
         `;
@@ -557,7 +557,7 @@
         <div class="topic-group">
           <div class="topic-group-header">
             <span class="category-dot" style="background:${topicColor?.text || '#888'}"></span>
-            <span class="topic-group-name">${topic.name}</span>
+            <span class="topic-group-name">${escapeHTML(topic.name)}</span>
             <span class="topic-group-progress">${topicChecked}/${topicTotal}</span>
           </div>
           <div class="subtopic-list">${subtopicsHTML}</div>
@@ -639,7 +639,7 @@
       </button>
       <div class="detail-header ${isComplete ? 'completed' : ''}">
         <div class="detail-day-label">Day ${dayNum} · ${day.phase} (${day.phaseRange})</div>
-        <div class="detail-title">${day.title}</div>
+        <div class="detail-title">${escapeHTML(day.title)}</div>
         <div class="detail-meta">
           <div class="detail-info">${ICONS.clock} ${day.estimatedTime}</div>
           <div class="detail-info">${categoryTags}</div>
@@ -807,7 +807,7 @@
       html += uncheckedItems.map(item => `
         <div class="backlog-item" data-id="${item.id}" data-day="${item.day}">
           <span class="backlog-day-badge">Day ${item.day}</span>
-          <span class="backlog-content">${item.label}</span>
+          <span class="backlog-content">${escapeHTML(item.label)}</span>
         </div>
       `).join("");
     }
@@ -821,7 +821,7 @@
     } else {
       html += missedNotes.map(item => `
         <div class="backlog-note-item" data-day="${item.day}">
-          <div class="backlog-note-day">Day ${item.day} — ${item.dayTitle}</div>
+          <div class="backlog-note-day">Day ${item.day} — ${escapeHTML(item.dayTitle)}</div>
           <div class="backlog-note-text">${escapeHTML(item.note)}</div>
         </div>
       `).join("");
@@ -951,7 +951,9 @@
         </div>
       `;
     } else {
-      body = `<div class="sets-grid">${QUESTION_SETS.map(s => {
+      // Show sets in the order the 60-day plan reaches them
+      const byFirstDay = [...QUESTION_SETS].sort((a, b) => Math.min(...a.days) - Math.min(...b.days));
+      body = `<div class="sets-grid">${byFirstDay.map(s => {
         const stats = getSetStats(s);
         return `
           <button class="set-card ${stats.solved === stats.total ? "complete" : ""}" data-set="${s.id}">
